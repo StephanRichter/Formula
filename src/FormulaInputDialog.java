@@ -55,8 +55,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	private JButton okButton = new JButton();
 	private JButton type = new JButton();
 	private JButton matrix = new JButton();
-	@SuppressWarnings("rawtypes")
-	private JComboBox arrowMenu = new JComboBox();
+	private JComboBox<String> arrowMenu = new JComboBox<String>();
 	private static int savedX = -1;
 	private static int savedY = -1;
 	private static final int frameWidth = 870;
@@ -302,12 +301,11 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	}
 
 	protected void smallActionPerformed(ActionEvent evt) {
-		// TODO Auto-generated method stub
 		format("small");
 	}
 
 	protected void okButtonActionPerformed(ActionEvent evt) {
-		// TODO Auto-generated method stub
+		oldFormula=formula;
 		dispose();
 	}
 
@@ -337,6 +335,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 
 	// Anfang Ereignisprozeduren
 	public void actionPerformed(ActionEvent e) {
+		System.out.println(e);
 		this.dispose();
 	}
 
@@ -349,6 +348,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	public void dispose(){
 		savedX=this.getX();
 		savedY=this.getY();
+		formula=oldFormula;
 		super.dispose();
 	}
 
@@ -391,6 +391,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		initLocation(owner);
 		FormulaInputDialog fp = new FormulaInputDialog(owner, title, code, true);
 		fp.setVisible(true);
+		
 		return fp.getResult();
 	}
 
