@@ -72,7 +72,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		oldFormula = text;
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent evt) {
-				dispose();
+				dispose(false);
 			}
 		});
 		setSize(frameWidth, frameHeight);
@@ -305,8 +305,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	}
 
 	protected void okButtonActionPerformed(ActionEvent evt) {
-		oldFormula=formula;
-		dispose();
+		dispose(true);
 	}
 
 	private FormulaInputDialog(JFrame owner, String title, boolean modal) {
@@ -335,20 +334,19 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 
 	// Anfang Ereignisprozeduren
 	public void actionPerformed(ActionEvent e) {
-		System.out.println(e);
-		this.dispose();
+		dispose(true);
 	}
 
-	public void keyTyped(KeyEvent e) {}
+	public void keyTyped(KeyEvent e) {
+	}
 
 	public void keyPressed(KeyEvent e) {
-
 	}
 	
-	public void dispose(){
+	public void dispose(boolean save){
 		savedX=this.getX();
 		savedY=this.getY();
-		formula=oldFormula;
+		if (!save) formula=oldFormula;
 		super.dispose();
 	}
 
@@ -356,7 +354,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		setFormula(inputTextField.getText());
 		if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
 			formula = oldFormula;
-			dispose();
+			dispose(false);
 		}
 	}
 
