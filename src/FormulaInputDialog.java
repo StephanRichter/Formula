@@ -14,8 +14,8 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JTextField;
 
+import tools.srsoftware.SuggestField;
 import tools.srsoftware.Tools;
 
 /**
@@ -33,7 +33,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	private static final long serialVersionUID = 1L;
 	// Anfang Variablen
 	private FormulaPanel formulaPanel = new FormulaPanel();
-	private JTextField inputTextField = new JTextField();
+	private SuggestField inputTextField = new SuggestField();
 	private String formula = null;
 	private String oldFormula = null;
 	private JButton addSum = new JButton();
@@ -296,7 +296,6 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	}
 
 	protected void bigActionPerformed(ActionEvent evt) {
-		// TODO Auto-generated method stub
 		format("big");		
 	}
 
