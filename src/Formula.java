@@ -1264,13 +1264,17 @@ public class Formula { // ------------------
 		if ((cmd.equals("bold")) || (cmd.equals("bf"))) return drawBold(g, new Point(x, y), param, visible);
 		if (cmd.equals("cases")) return drawCases(g, new Point(x, y), param, visible);
 		if (cmd.equals("cap")) return drawIntervallSign(g, new Point(x, y), param, "\u22C2", visible);
+		if (cmd.equals("Cap")) return drawIntervallSign(g, new Point(x, y), param, "\u22C0", visible);
 		if (cmd.equals("ceil")) return drawCeil(g, new Point(x, y), param, visible);
 		if (cmd.equals("color")) return drawColored(g, new Point(x, y), param, visible);
 		if (cmd.equals("cup")) return drawIntervallSign(g, new Point(x, y), param, "\u22C3", visible);
 		if (cmd.equals("cup+")) return drawIntervallSign(g, new Point(x, y), param, "\u228e", visible);
+		if (cmd.equals("Cup")) return drawIntervallSign(g, new Point(x, y), param, "\u22c1", visible);
 		if (cmd.equals("det")) return drawDeterminant(g, new Point(x, y), param, visible);
 		if (cmd.equals("dot")) return drawWithDot(g, new Point(x, y), param, visible);
+		if (cmd.equals("exists")) return drawIntervallSign(g, new Point(x, y), param, "\u2203", visible);
 		if (cmd.equals("floor")) return drawFloor(g, new Point(x, y), param, visible);
+		if (cmd.equals("forall")) return drawIntervallSign(g, new Point(x, y), param, "\u2200", visible);
 		if (cmd.equals("frac")) return drawFrac(g, new Point(x, y), param, visible);
 		if (cmd.equals("hat")) return drawWithHat(g, new Point(x, y), param, visible);
 		if (cmd.equals("index")) return drawSmaller(g, new Point(x, y + 1), "\\block{"+param+"}", visible);
