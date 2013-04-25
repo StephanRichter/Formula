@@ -55,7 +55,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	private JButton okButton = new JButton();
 	private JButton type = new JButton();
 	private JButton matrix = new JButton();
-	private JComboBox<String> arrowMenu = new JComboBox<String>();
+	private JComboBox arrowMenu = new JComboBox();
 	private static int savedX = -1;
 	private static int savedY = -1;
 	private static final int frameWidth = 870;
