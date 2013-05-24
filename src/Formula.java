@@ -1009,6 +1009,14 @@ public class Formula { // ------------------
 		result.width += 20;
 		return result;
 	}
+	
+	private Dimension drawStriked(Graphics g, Point origin, String param, boolean visible) {
+		// Zeichnet den �bergebenen Abschnitt unterstrichen
+		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
+		if (visible) g.drawLine(origin.x, origin.y + result.height/2, origin.x + result.width, origin.y + result.height/2);
+		result.height++;
+		return result;
+	}
 
 	private Dimension drawUnderlined(Graphics g, Point origin, String param, boolean visible) {
 		// Zeichnet den �bergebenen Abschnitt unterstrichen
@@ -1289,6 +1297,7 @@ public class Formula { // ------------------
 		if (cmd.equals("root")) return drawRoot(g, new Point(x, y), param, visible);
 		if (cmd.equals("set")) return drawSet(g, new Point(x, y), param, visible);
 		if (cmd.equals("small")) return drawSmaller(g, new Point(x, y + 1), param, visible);
+		if (cmd.equals("strike")) return drawStriked(g, new Point(x, y), param, visible);
 		if (cmd.equals("sum")) return drawIntervallSign(g, new Point(x, y), param, "\u2211", visible);
 		if (cmd.equals("tilde")) return drawWithTilde(g, new Point(x, y), param, visible);
 		if (cmd.equals("type")) return drawTyped(g, new Point(x, y), param, visible);
