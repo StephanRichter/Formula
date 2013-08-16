@@ -17,8 +17,8 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 
-import tools.srsoftware.SuggestField;
-import tools.srsoftware.Tools;
+import de.srsoftware.tools.SuggestField;
+import de.srsoftware.tools.Tools;
 
 /**
  * 
