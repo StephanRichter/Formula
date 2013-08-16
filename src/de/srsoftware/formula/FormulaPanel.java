@@ -1,3 +1,5 @@
+package de.srsoftware.formula;
+
 import java.awt.*;
 import javax.swing.*;
 public class FormulaPanel extends JPanel{

@@ -1,3 +1,5 @@
+package de.srsoftware.formula;
+
 
 public interface FormulaLanguagePack {
 	public String LOWER_SUM_BOUND();
