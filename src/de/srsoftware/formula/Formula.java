@@ -915,6 +915,57 @@ public class Formula { // ------------------
 		result.width += 4 * dist;
 		return result;
 	}
+	
+	private Dimension drawRBlock(Graphics g, Point origin, String param, boolean visible) {		
+		int width=drawBlock(g, origin, param, false).width;
+		int beginIndex = 0;
+		int endIndex = param.indexOf(';');
+		Dimension result = new Dimension(0, 0);
+		if (endIndex < 0) { // Keine Trennung mit Semikolons
+			endIndex = param.indexOf(',');
+			if (endIndex < 0) { // �berhaupt keine Trennung
+				int w=formulaLine(g, origin, param, false).width;
+				result = formulaLine(g, width-w+origin.x, origin.y, param, visible);
+			} else { // Trennung mit Kommata
+				int w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
+				result = formulaLine(g, width-w+origin.x, origin.y, param.substring(beginIndex, endIndex), visible);
+				beginIndex = endIndex + 1;
+				endIndex = param.indexOf(',', beginIndex);
+				while (endIndex > -1) {
+					w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
+					Dimension lineDim = formulaLine(g, width-w+origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
+					result.width = Math.max(result.width, lineDim.width);
+					result.height += lineDim.height;
+					beginIndex = endIndex + 1;
+					endIndex = param.indexOf(',', beginIndex);
+				}
+				endIndex = param.length();
+				w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
+				Dimension lineDim = formulaLine(g, width-w+origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
+				result.width = Math.max(result.width, lineDim.width);
+				result.height += lineDim.height;
+			}
+		} else { // Trennung mittels Semikolons
+			int w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
+			result = formulaLine(g, width-w+origin.x, origin.y, param.substring(beginIndex, endIndex), visible);
+			beginIndex = endIndex + 1;
+			endIndex = param.indexOf(';', beginIndex);
+			while (endIndex > -1) {
+				w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
+				Dimension lineDim = formulaLine(g, width-w+origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
+				result.width = Math.max(result.width, lineDim.width);
+				result.height += lineDim.height;
+				beginIndex = endIndex + 1;
+				endIndex = param.indexOf(';', beginIndex);
+			}
+			endIndex = param.length();
+			w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
+			Dimension lineDim = formulaLine(g, width-w+origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
+			result.width = Math.max(result.width, lineDim.width);
+			result.height += lineDim.height;
+		}
+		return result;
+	}
 
 	private Dimension drawBlock(Graphics g, Point origin, String param, boolean visible) {
 		int beginIndex = 0;
@@ -1295,6 +1346,7 @@ public class Formula { // ------------------
 		if (cmd.equals("matrix")) return drawMatrix(g, new Point(x, y), param, visible);
 		if (cmd.equals("overline")) return drawOverlined(g, new Point(x, y), param, visible);
 		if (cmd.equals("prod")) return drawIntervallSign(g, new Point(x, y), param, "\u220F", visible);
+		if (cmd.equals("rblock")) return drawRBlock(g, new Point(x, y), param, visible);
 		if (cmd.equals("rgb")) return drawRGBColored(g, new Point(x, y), param, visible);
 		if (cmd.equals("root")) return drawRoot(g, new Point(x, y), param, visible);
 		if (cmd.equals("set")) return drawSet(g, new Point(x, y), param, visible);
