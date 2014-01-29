@@ -18,7 +18,7 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 
 import de.srsoftware.tools.SuggestField;
-import de.srsoftware.tools.Tools;
+import de.srsoftware.tools.translations.Translations;
 
 /**
  * 
@@ -27,6 +27,8 @@ import de.srsoftware.tools.Tools;
  * @version 1.0 vom 28.06.2007
  * @author Stephan Richter
  */
+
+
 
 public class FormulaInputDialog extends JDialog implements ActionListener, KeyListener {
 	/**
@@ -62,15 +64,18 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	private static int savedY = -1;
 	private static final int frameWidth = 870;
 	private static final int frameHeight = 400;
-	private static FormulaLanguagePack languagePack=null;
 
+	
 	// Ende Variablen
 
-	private void init(String title, String text, boolean modal) {
-		if (Tools.language.equals("English")){
-			languagePack=new FormulaLanguagePack_English(); // auch verwendet in StarTreePanel und MindmapNode; FormulaInputDialog verwendet FormulaLanguagePack 
-		} else languagePack = new FormulaLanguagePack_German(); // auch verwendet in StarTreePanel und MindmapNode; FormulaInputDialog verwendet FormulaLanguagePack
 
+	private static String _(String text) { 
+		return Translations.get(text);
+	}
+	private static String _(String key, Object insert) {
+		return Translations.get(key, insert);
+	}
+	private void init(String title, String text, boolean modal) {
 		oldFormula = text;
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent evt) {
@@ -104,7 +109,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		inputTextField.addActionListener(this);
 		cp.add(inputTextField);
 		addSum.setBounds(0, 264, 83, 25);
-		addSum.setText(languagePack.SUM());
+		addSum.setText(_("sum"));
 		cp.add(addSum);
 		addSum.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -113,7 +118,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 
 		fractal.setBounds(88, 264, 100, 25);
-		fractal.setText(languagePack.FRACTION());
+		fractal.setText(_("fraction"));
 		cp.add(fractal);
 		fractal.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -122,7 +127,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 
 		product.setBounds(0, 290, 83, 25);
-		product.setText(languagePack.PRODUCT());
+		product.setText(_("product"));
 		cp.add(product);
 		product.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -131,7 +136,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 
 		root.setBounds(88, 290, 100, 25);
-		root.setText(languagePack.ROOT());
+		root.setText(_("root"));
 		cp.add(root);
 		root.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -140,7 +145,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 		
 		small.setBounds(88, 316, 100, 25);
-		small.setText(languagePack.SMALL());
+		small.setText(_("small"));
 		cp.add(small);
 		small.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -149,7 +154,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 		
 		big.setBounds(88, 342, 100, 25);
-		big.setText(languagePack.BIG());
+		big.setText(_("big"));
 		cp.add(big);
 		big.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -158,7 +163,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 
 		integral.setBounds(0, 316, 83, 25);
-		integral.setText(languagePack.INTEGRAL());
+		integral.setText(_("integral"));
 		cp.add(integral);
 		integral.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -167,7 +172,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 
 		cases.setBounds(193, 264, 157, 25);
-		cases.setText(languagePack.CASE_DIST());
+		cases.setText(_("cases"));
 		cp.add(cases);
 		cases.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -176,7 +181,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 
 		ceiling.setBounds(355, 264, 85, 25);
-		ceiling.setText(languagePack.CEILING());
+		ceiling.setText(_("ceiling"));
 		cp.add(ceiling);
 		ceiling.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -185,7 +190,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 
 		floor.setBounds(355, 290, 85, 25);
-		floor.setText(languagePack.FLOOR());
+		floor.setText(_("floor"));
 		cp.add(floor);
 		floor.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -194,7 +199,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 		
 		bold.setBounds(455, 264, 125, 25);
-		bold.setText(languagePack.BOLD());
+		bold.setText(_("bold"));
 		cp.add(bold);
 		bold.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -203,7 +208,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 
 		italic.setBounds(455, 290, 125, 25);
-		italic.setText(languagePack.ITALIC());
+		italic.setText(_("italic"));
 		cp.add(italic);
 		italic.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -212,7 +217,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 
 		underlined.setBounds(455, 316, 125, 25);
-		underlined.setText(languagePack.UNDERLINED());
+		underlined.setText(_("underlined"));
 		cp.add(underlined);
 		underlined.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -221,7 +226,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 
 		overlined.setBounds(455, 342, 125, 25);
-		overlined.setText(languagePack.OVERLINED());
+		overlined.setText(_("overlined"));
 		cp.add(overlined);
 		overlined.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -230,7 +235,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 
 		subscript.setBounds(193, 316, 157, 25);
-		subscript.setText(languagePack.SUBSCRIPT());
+		subscript.setText(_("subscript"));
 		cp.add(subscript);
 		subscript.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -239,7 +244,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 
 		superscript.setBounds(193, 342, 157, 25);
-		superscript.setText(languagePack.SUPERSCRIPT());
+		superscript.setText(_("superscript"));
 		cp.add(superscript);
 		superscript.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -248,7 +253,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 
 		type.setBounds(355, 342, 95, 25);
-		type.setText(languagePack.TYPED());
+		type.setText(_("typewriter"));
 		cp.add(type);
 		type.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -257,7 +262,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 
 		matrix.setBounds(0, 342, 83, 25);
-		matrix.setText(languagePack.MATRIX());
+		matrix.setText(_("matrix"));
 		cp.add(matrix);
 		matrix.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -265,7 +270,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 			}
 		});		
 		okButton.setBounds(707, 342, 83, 25);
-		okButton.setText(languagePack.OK());
+		okButton.setText(_("Ok"));
 		cp.add(okButton);
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
@@ -274,21 +279,21 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});
 
 		arrowMenu.setBounds(590, 264, 200, 25);
-		arrowMenu.addItem(languagePack.ARROWS());
+		arrowMenu.addItem(_("Arrows"));
 		arrowMenu.addItem("\u2190 (<-)");
 		arrowMenu.addItem("\u21D0 (<=)");
 		arrowMenu.addItem("\u2194 (<->)");
 		arrowMenu.addItem("\u21D4 (<=>)");
-		arrowMenu.addItem("\u2193 (downarrow)");
-		arrowMenu.addItem("\u21D3 (Downarrow)");
+		arrowMenu.addItem("\u2193 ("+_("Downarrow (single)")+")");
+		arrowMenu.addItem("\u21D3 ("+_("Downarrow (double)")+")");
 		arrowMenu.addItem("\u2192 (->)");
 		arrowMenu.addItem("\u21D2 (=>)");
-		arrowMenu.addItem("\u2191 (uparrow)");
-		arrowMenu.addItem("\u21D1 (Uparrow)");
+		arrowMenu.addItem("\u2191 ("+_("Uparrow (single)")+")");
+		arrowMenu.addItem("\u21D1 ("+_("Uparrow (double)")+")");
 		arrowMenu.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String s = arrowMenu.getSelectedItem().toString();
-				if (s.contains("(")) insertText('\\' + s.substring(s.indexOf('(') + 1, s.indexOf(')')) + ' ');
+				if (s.contains("(")) insertText(s.substring(0,1));
 			}
 		});
 		cp.add(arrowMenu);
@@ -425,27 +430,27 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	}
 
 	private void addSumActionPerformed(ActionEvent evt) {
-		insertText("\\sum{" + readInput(this, languagePack.LOWER_SUM_BOUND()) + ",");
+		insertText("\\sum{" + readInput(this, _("enter lower bounds for sum:")) + ",");
 	}
 
 	private void productActionPerformed(ActionEvent evt) {
-		insertText("\\prod{" + readInput(this, languagePack.LOWER_PRODUCT_BOUND()) + ",");
+		insertText("\\prod{" + readInput(this, _("enter lower bounds for product:")) + ",");
 	}
 
 	private void fractalActionPerformed(ActionEvent evt) {
-		insertText("\\frac{" + readInput(this, languagePack.ENTER_DIVIDENT()) + ",");
+		insertText("\\frac{" + readInput(this, _("enter divisor:")) + ",");
 	}
 
 	private void rootActionPerformed(ActionEvent evt) {
-		insertText(readInput(this, languagePack.BASE_AND_EXPONENT(), "\\root{") + "}");
+		insertText(readInput(this, _("enter base (and exponent, if you want):"), "\\root{") + "}");
 	}
 
 	private void integralActionPerformed(ActionEvent evt) {
-		insertText(readInput(this, languagePack.INTEGRAL_BOUNDS(), "\\integr{") + "}");
+		insertText(readInput(this, _("enter integral bounds, separated by comma:"), "\\integr{") + "}");
 	}
 
 	private void casesActionPerformed(ActionEvent evt) {
-		insertText(readInput(this, languagePack.CASES(), "\\cases{") + "}");
+		insertText(readInput(this, _("enter cases separated by comma or semicolon:"), "\\cases{") + "}");
 	}
 
 	private void ceilingActionPerformed(ActionEvent evt) {
