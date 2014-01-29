@@ -72,9 +72,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	private static String _(String text) { 
 		return Translations.get(text);
 	}
-	private static String _(String key, Object insert) {
-		return Translations.get(key, insert);
-	}
+
 	private void init(String title, String text, boolean modal) {
 		oldFormula = text;
 		addWindowListener(new WindowAdapter() {
