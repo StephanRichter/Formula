@@ -35,6 +35,36 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	public static String readInput(JFrame owner, String title) {
+		initLocation(owner);
+		FormulaInputDialog fp = new FormulaInputDialog(owner, title, true);		
+		fp.setVisible(true);
+		return fp.getResult();
+	}
+	public static String readInput(JFrame owner, String title, String code) {
+		initLocation(owner);
+		FormulaInputDialog fp = new FormulaInputDialog(owner, title, code, true);
+		fp.setVisible(true);
+		
+		return fp.getResult();
+	}
+	private static void initLocation(JFrame owner){
+		if (owner!=null && (savedX < 0) && (savedY < 0)){
+			savedX=owner.getLocation().x+((owner.getWidth()-frameWidth)/2);
+			savedY=owner.getLocation().y+((owner.getHeight()-frameHeight)/2);
+		}
+		
+	}
+	private static String readInput(JDialog owner, String title) {
+		FormulaInputDialog fp = new FormulaInputDialog(owner, title, true);
+		fp.setVisible(true);
+		return fp.getResult();
+	}
+	private static String readInput(JDialog owner, String title, String code) {
+		FormulaInputDialog fp = new FormulaInputDialog(owner, title, code, true);
+		fp.setVisible(true);
+		return fp.getResult();
+	}
 	// Anfang Variablen
 	private FormulaPanel formulaPanel = new FormulaPanel();
 	private SuggestField inputTextField = new SuggestField();
@@ -59,18 +89,115 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	private JButton okButton = new JButton();
 	private JButton type = new JButton();
 	private JButton matrix = new JButton();
-	private JComboBox arrowMenu = new JComboBox();
-	private static int savedX = -1;
-	private static int savedY = -1;
-	private static final int frameWidth = 870;
-	private static final int frameHeight = 400;
 
 	
 	// Ende Variablen
 
 
+	private JComboBox arrowMenu = new JComboBox();
+
+	private static int savedX = -1;
+
+	private static int savedY = -1;
+
+	private static final int frameWidth = 870;
+
+	private static final int frameHeight = 400;
+
 	private static String _(String text) { 
 		return Translations.get(text);
+	}
+
+	private FormulaInputDialog(JDialog owner, String title, boolean modal) {
+		// Dialog-Initialisierung
+		super(owner, title, modal);
+		init(title, null, modal);
+	}
+
+	private FormulaInputDialog(JDialog owner, String title, String text, boolean modal) {
+		// Dialog-Initialisierung
+		super(owner, title, modal);
+		init(title, text, modal);
+	}
+
+	private FormulaInputDialog(JFrame owner, String title, boolean modal) {
+		// Dialog-Initialisierung
+		super(owner, title, modal);
+		init(title, null, modal);
+	}
+
+	private FormulaInputDialog(JFrame owner, String title, String text, boolean modal) {
+		// Dialog-Initialisierung
+		super(owner, title, modal);
+		init(title, text, modal);
+	}
+
+	// Anfang Ereignisprozeduren
+	public void actionPerformed(ActionEvent e) {
+		dispose(true);
+	}
+
+	public void dispose(boolean save){
+		savedX=this.getX();
+		savedY=this.getY();
+		if (!save) formula=oldFormula;
+		super.dispose();
+	}
+	
+	public void keyPressed(KeyEvent e) {
+	}
+
+	public void keyReleased(KeyEvent e) {
+		setFormula(inputTextField.getText());
+		if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
+			formula = oldFormula;
+			dispose(false);
+		}
+	}
+
+	public void keyTyped(KeyEvent e) {
+	}
+
+	private void addSumActionPerformed(ActionEvent evt) {
+		insertText("\\sum{" + readInput(this, _("enter lower bounds for sum:")) + ",");
+	}
+	
+	private void boldActionPerformed(ActionEvent evt) {
+		format("bold");
+	}
+
+	private void casesActionPerformed(ActionEvent evt) {
+		insertText(readInput(this, _("enter cases separated by comma or semicolon:"), "\\cases{") + "}");
+	}
+
+	private void ceilingActionPerformed(ActionEvent evt) {
+		format("ceil");
+	}
+
+
+	private void floorActionPerformed(ActionEvent evt) {
+		format("floor");
+	}
+
+	private void format(String code) {
+		int selStart = inputTextField.getSelectionStart();
+		int selEnd = inputTextField.getSelectionEnd();
+		if (selStart < selEnd) {
+			inputTextField.replaceSelection("\\" + code + "{" + inputTextField.getSelectedText() + "}");
+			inputTextField.setSelectionStart(selStart);
+			inputTextField.setSelectionEnd(selEnd + 3 + code.length());
+			setFormula(inputTextField.getText());
+		} else
+			insertText("\\" + code + "{");
+	}
+
+	private void fractalActionPerformed(ActionEvent evt) {
+		insertText("\\frac{" + readInput(this, _("enter divisor:")) + ",");
+	}
+
+	// Ende Ereignisprozeduren
+	private String getResult() {
+		return formula;
 	}
 
 	private void init(String title, String text, boolean modal) {
@@ -300,112 +427,6 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		setResizable(false);
 	}
 
-	protected void bigActionPerformed(ActionEvent evt) {
-		format("big");		
-	}
-
-	protected void smallActionPerformed(ActionEvent evt) {
-		format("small");
-	}
-
-	protected void okButtonActionPerformed(ActionEvent evt) {
-		dispose(true);
-	}
-
-	private FormulaInputDialog(JFrame owner, String title, boolean modal) {
-		// Dialog-Initialisierung
-		super(owner, title, modal);
-		init(title, null, modal);
-	}
-
-	private FormulaInputDialog(JDialog owner, String title, boolean modal) {
-		// Dialog-Initialisierung
-		super(owner, title, modal);
-		init(title, null, modal);
-	}
-
-	private FormulaInputDialog(JFrame owner, String title, String text, boolean modal) {
-		// Dialog-Initialisierung
-		super(owner, title, modal);
-		init(title, text, modal);
-	}
-
-	private FormulaInputDialog(JDialog owner, String title, String text, boolean modal) {
-		// Dialog-Initialisierung
-		super(owner, title, modal);
-		init(title, text, modal);
-	}
-
-	// Anfang Ereignisprozeduren
-	public void actionPerformed(ActionEvent e) {
-		dispose(true);
-	}
-
-	public void keyTyped(KeyEvent e) {
-	}
-
-	public void keyPressed(KeyEvent e) {
-	}
-	
-	public void dispose(boolean save){
-		savedX=this.getX();
-		savedY=this.getY();
-		if (!save) formula=oldFormula;
-		super.dispose();
-	}
-
-	public void keyReleased(KeyEvent e) {
-		setFormula(inputTextField.getText());
-		if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
-			formula = oldFormula;
-			dispose(false);
-		}
-	}
-
-	private static String readInput(JDialog owner, String title) {
-		FormulaInputDialog fp = new FormulaInputDialog(owner, title, true);
-		fp.setVisible(true);
-		return fp.getResult();
-	}
-
-	private static String readInput(JDialog owner, String title, String code) {
-		FormulaInputDialog fp = new FormulaInputDialog(owner, title, code, true);
-		fp.setVisible(true);
-		return fp.getResult();
-	}
-	
-	private static void initLocation(JFrame owner){
-		if (owner!=null && (savedX < 0) && (savedY < 0)){
-			savedX=owner.getLocation().x+((owner.getWidth()-frameWidth)/2);
-			savedY=owner.getLocation().y+((owner.getHeight()-frameHeight)/2);
-		}
-		
-	}
-
-	public static String readInput(JFrame owner, String title) {
-		initLocation(owner);
-		FormulaInputDialog fp = new FormulaInputDialog(owner, title, true);		
-		fp.setVisible(true);
-		return fp.getResult();
-	}
-
-	public static String readInput(JFrame owner, String title, String code) {
-		initLocation(owner);
-		FormulaInputDialog fp = new FormulaInputDialog(owner, title, code, true);
-		fp.setVisible(true);
-		
-		return fp.getResult();
-	}
-
-
-	private void setFormula(String code) {	
-		formula=code;
-		formulaPanel.setFormula(code);
-		repaint();
-		//System.out.println("set formula to "+formula);
-		inputTextField.requestFocus();
-	}
-
 	private void insertText(String tx) {
 		String tmp = inputTextField.getText();
 		int pos = inputTextField.getCaretPosition();
@@ -415,64 +436,36 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		setFormula(tmp);
 	}
 
-	private void format(String code) {
-		int selStart = inputTextField.getSelectionStart();
-		int selEnd = inputTextField.getSelectionEnd();
-		if (selStart < selEnd) {
-			inputTextField.replaceSelection("\\" + code + "{" + inputTextField.getSelectedText() + "}");
-			inputTextField.setSelectionStart(selStart);
-			inputTextField.setSelectionEnd(selEnd + 3 + code.length());
-			setFormula(inputTextField.getText());
-		} else
-			insertText("\\" + code + "{");
-	}
-
-	private void addSumActionPerformed(ActionEvent evt) {
-		insertText("\\sum{" + readInput(this, _("enter lower bounds for sum:")) + ",");
-	}
-
-	private void productActionPerformed(ActionEvent evt) {
-		insertText("\\prod{" + readInput(this, _("enter lower bounds for product:")) + ",");
-	}
-
-	private void fractalActionPerformed(ActionEvent evt) {
-		insertText("\\frac{" + readInput(this, _("enter divisor:")) + ",");
-	}
-
-	private void rootActionPerformed(ActionEvent evt) {
-		insertText(readInput(this, _("enter base (and exponent, if you want):"), "\\root{") + "}");
-	}
-
 	private void integralActionPerformed(ActionEvent evt) {
 		insertText(readInput(this, _("enter integral bounds, separated by comma:"), "\\integr{") + "}");
-	}
-
-	private void casesActionPerformed(ActionEvent evt) {
-		insertText(readInput(this, _("enter cases separated by comma or semicolon:"), "\\cases{") + "}");
-	}
-
-	private void ceilingActionPerformed(ActionEvent evt) {
-		format("ceil");
-	}
-
-	private void floorActionPerformed(ActionEvent evt) {
-		format("floor");
-	}
-
-	private void boldActionPerformed(ActionEvent evt) {
-		format("bold");
 	}
 
 	private void italicActionPerformed(ActionEvent evt) {
 		format("it");
 	}
 
-	private void underlinedActionPerformed(ActionEvent evt) {
-		format("underline");
+	private void matrixActionPerformed(ActionEvent evt) {
+		format("matrix");
 	}
 
 	private void overlinedActionPerformed(ActionEvent evt) {
 		format("overline");
+	}
+
+	private void productActionPerformed(ActionEvent evt) {
+		insertText("\\prod{" + readInput(this, _("enter lower bounds for product:")) + ",");
+	}
+
+	private void rootActionPerformed(ActionEvent evt) {
+		insertText(readInput(this, _("enter base (and exponent, if you want):"), "\\root{") + "}");
+	}
+
+	private void setFormula(String code) {	
+		formula=code;
+		formulaPanel.setFormula(code);
+		repaint();
+		//System.out.println("set formula to "+formula);
+		inputTextField.requestFocus();
 	}
 
 	private void subscriptActionPerformed(ActionEvent evt) {
@@ -487,13 +480,20 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		format("type");
 	}
 
-	private void matrixActionPerformed(ActionEvent evt) {
-		format("matrix");
+	private void underlinedActionPerformed(ActionEvent evt) {
+		format("underline");
 	}
 
-	// Ende Ereignisprozeduren
-	private String getResult() {
-		return formula;
+	protected void bigActionPerformed(ActionEvent evt) {
+		format("big");		
+	}
+
+	protected void okButtonActionPerformed(ActionEvent evt) {
+		dispose(true);
+	}
+
+	protected void smallActionPerformed(ActionEvent evt) {
+		format("small");
 	}
 
 }

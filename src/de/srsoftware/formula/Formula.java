@@ -8,24 +8,12 @@ import java.awt.Graphics;
 import java.awt.Point;
 
 public class Formula { // ------------------
-	private String code;
-	private int height;
-	private int width;
-	private boolean boxDrawn = false;
+	/***************************** Zeichenoperationen *****************************/
 
-	/***************************** Konstruktor ************************************/
-	public Formula(String newCode) {
-		code = doReplacements(newCode);
-		resetDimension();
+	public static void main(String[] args) {
+		Formula f = new Formula("Dies ist ein {fett \\it{krasser}} \\Alpha -Test! Mach \\underline{das} mal nach!");
+		System.out.println(f.getText());
 	}
-
-	/***************************** Konstruktor ************************************/
-	/***************************** Initialisierung ********************************/
-	public void resetDimension() {
-		height = -1;
-		width = -1;
-	}
-
 	/***************************** Initialisierung ********************************/
 	/****************************** Abfragen **************************************/
 	private static String connectBrackets(String inp) {
@@ -50,15 +38,288 @@ public class Formula { // ------------------
 		}
 		return result;
 	}
-
-	private static String StrReplace(String source, String pattern, String news) {
-		int i = source.indexOf(pattern);
+	private static String replaceBoldSymbols(String inp) {
+		int i = inp.indexOf("\\bold{");
 		while (i > -1) {
-			source = source.substring(0, i) + news + source.substring(i + pattern.length());
-			i = source.indexOf(pattern);
+			int j = i + 6;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			inp = inp.substring(0, i) + "<b>" + inp.substring(i + 6, j - 1) + "</b>" + inp.substring(j);
+			i = inp.indexOf("\\bold{");
 		}
-		return source;
-	} // <font face=symbol></font>
+		return inp;
+	}
+	private static String replaceCases(String inp) {
+		int i = inp.indexOf("\\cases{");
+		if (i > -1) {
+			int j = i + 7;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			String prefix = inp.substring(0, i);
+			String infix = inp.substring(i + 7, j - 1);
+			String suffix = inp.substring(j);
+
+			i = 0; // Position
+			b = 0; // z�hlt Klammern
+			int last = 0;
+			int s = 0; // z�hlt Semikolons
+			while (i < infix.length()) {
+				if (infix.charAt(i) == '{') b++;
+				if (infix.charAt(i) == '}') b--;
+				if ((infix.charAt(i) == ';') && (b == 0)) {
+					s++;
+					infix = infix.substring(0, last) + replaceCases(infix.substring(last, i)) + "<br>" + replaceCases(infix.substring(i + 1));
+					last = i;
+				}
+				i++;
+			}
+			if (s == 0) {
+				i = 0; // Position
+				b = 0; // z�hlt Klammern
+				while (i < infix.length()) {
+					if (infix.charAt(i) == '{') b++;
+					if (infix.charAt(i) == '}') b--;
+					if ((infix.charAt(i) == ',') && (b == 0)) {
+						infix = infix.substring(0, last) + replaceCases(infix.substring(last, i)) + "<br>" + replaceCases(infix.substring(i + 1));
+						last = i;
+					}
+					i++;
+				}
+			}
+
+			inp = "<table border=\"0\" cellspacing=\"0\" bordercolor=\"#000000\">\n";
+			inp = inp + "  <tr>\n    <td>" + prefix + "</td>\n    ";
+			inp = inp + "~CASES~" + infix + "</td>\n    ";
+			inp = inp + "<td>" + replaceCases(suffix) + "</td>\n  </tr>\n</table>";
+		}
+		return inp;
+	}
+
+	private static String replaceColorTags(String inp) {
+		int i = inp.indexOf("\\color{");
+		while (i > -1) {
+			int j = i + 7;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			inp = inp.substring(0, i) + "<font color=" + inp.substring(i + 11, i + 13) + inp.substring(i + 9, i + 11) + inp.substring(i + 7, i + 9) + ">" + inp.substring(i + 14, j - 1) + "</font>" + inp.substring(j);
+			i = inp.indexOf("\\color{");
+		}
+		return inp;
+	}
+
+	private static String replaceFracs(String inp) {
+		int i = inp.indexOf("\\frac{");
+		if (i > -1) {
+			int j = i + 6;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			String prefix = inp.substring(0, i);
+			String infix1 = inp.substring(i + 6, j - 1);
+			String suffix = inp.substring(j);
+			b = 0;
+			int l = 0;
+			int k = 0; // mekr Position des letzten Kommas
+			int s = 0; // mekr Position des letzten Semikolon
+			while (l < infix1.length()) {
+				switch (infix1.charAt(l)) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				case ',': {
+					if (b == 0) k = l;
+					break;
+				}
+				case ';': {
+					if (b == 0) s = l;
+					break;
+				}
+				}
+				l++;
+			}
+
+			if (s > 0) k = s; // wenn Semikolon gefunden, dann Semikolon nehmen, sonst komma nehmen nehmen
+			String infix2 = infix1.substring(k + 1);
+			infix1 = infix1.substring(0, k);
+			inp = "<table border=\"0\" cellspacing=\"0\" bordercolor=\"#000000\">\n";
+			inp = inp + "  <tr>\n    <td rowspan=\"2\">" + prefix + "</td>\n    ";
+			inp = inp + "<td style=\"border-bottom-style: solid; border-bottom-width: 1px\" align=\"center\">" + replaceFracs(infix1) + "</td>\n    ";
+			inp = inp + "<td rowspan=\"2\">" + replaceFracs(suffix) + "</td>\n  </tr>\n";
+			inp = inp + "  <tr><td align=\"center\">" + replaceFracs(infix2) + "</td>\n</tr></table>";
+		}
+		return inp;
+	}
+
+	private static String replaceItalicSymbols(String inp) {
+		int i = inp.indexOf("\\it{");
+		while (i > -1) {
+			int j = i + 4;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			inp = inp.substring(0, i) + "<i>" + inp.substring(i + 4, j - 1) + "</i>" + inp.substring(j);
+			i = inp.indexOf("\\it{");
+		}
+		return inp;
+	}
+
+	private static String replaceRGBTags(String inp) {
+		int i = inp.indexOf("\\rgb{");
+		while (i > -1) {
+			int j = i + 5;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			inp = inp.substring(0, i) + "<font color=" + inp.substring(i + 5, i + 11) + ">" + inp.substring(i + 12, j - 1) + "</font>" + inp.substring(j);
+			i = inp.indexOf("\\rgb{");
+		}
+		return inp;
+	}
+
+	private static String replaceRootedSymbols(String inp) {
+		int i = inp.indexOf("\\root{");
+		while (i > -1) {
+			int j = i + 6;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			String infix = inp.substring(i + 6, j - 1);
+			System.out.println(infix);
+			b = 0;
+			int l = 0;
+			int k = 0; // mekr Position des letzten Kommas
+			int s = 0; // mekr Position des letzten Semikolon
+			while (l < infix.length()) {
+				switch (infix.charAt(l)) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				case ',': {
+					if (b == 0) k = l;
+				}
+				case ';': {
+					if (b == 0) s = l;
+				}
+				}
+				l++;
+			}
+			if (s + k > 0) {
+				if (s > 0) k = s; // wenn Semikolon gefunden, dann Semikolon nehmen, sonst komma nehmen nehmen
+				String rad = infix.substring(0, k);
+				infix = infix.substring(k + 1);
+				System.out.println(rad);
+				System.out.println(infix);
+				inp = inp.substring(0, i) + "<sup>" + rad + "</sup>&radic;<span style=\"text-decoration: overline\">" + infix + "</span>" + inp.substring(j);
+			} else
+				inp = inp.substring(0, i) + "&radic;<span style=\"text-decoration: overline\">" + infix + "</span>" + inp.substring(j);
+			i = inp.indexOf("\\root{");
+		}
+		return inp;
+	}
 
 	private static String replaceSpecialSigns(String inp) {
 		inp = StrReplace(inp, "<", "&lt;");
@@ -188,257 +449,6 @@ public class Formula { // ------------------
 		return inp;
 	}
 
-	private static String replaceCases(String inp) {
-		int i = inp.indexOf("\\cases{");
-		if (i > -1) {
-			int j = i + 7;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			String prefix = inp.substring(0, i);
-			String infix = inp.substring(i + 7, j - 1);
-			String suffix = inp.substring(j);
-
-			i = 0; // Position
-			b = 0; // z�hlt Klammern
-			int last = 0;
-			int s = 0; // z�hlt Semikolons
-			while (i < infix.length()) {
-				if (infix.charAt(i) == '{') b++;
-				if (infix.charAt(i) == '}') b--;
-				if ((infix.charAt(i) == ';') && (b == 0)) {
-					s++;
-					infix = infix.substring(0, last) + replaceCases(infix.substring(last, i)) + "<br>" + replaceCases(infix.substring(i + 1));
-					last = i;
-				}
-				i++;
-			}
-			if (s == 0) {
-				i = 0; // Position
-				b = 0; // z�hlt Klammern
-				while (i < infix.length()) {
-					if (infix.charAt(i) == '{') b++;
-					if (infix.charAt(i) == '}') b--;
-					if ((infix.charAt(i) == ',') && (b == 0)) {
-						infix = infix.substring(0, last) + replaceCases(infix.substring(last, i)) + "<br>" + replaceCases(infix.substring(i + 1));
-						last = i;
-					}
-					i++;
-				}
-			}
-
-			inp = "<table border=\"0\" cellspacing=\"0\" bordercolor=\"#000000\">\n";
-			inp = inp + "  <tr>\n    <td>" + prefix + "</td>\n    ";
-			inp = inp + "~CASES~" + infix + "</td>\n    ";
-			inp = inp + "<td>" + replaceCases(suffix) + "</td>\n  </tr>\n</table>";
-		}
-		return inp;
-	}
-
-	private static String replaceFracs(String inp) {
-		int i = inp.indexOf("\\frac{");
-		if (i > -1) {
-			int j = i + 6;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			String prefix = inp.substring(0, i);
-			String infix1 = inp.substring(i + 6, j - 1);
-			String suffix = inp.substring(j);
-			b = 0;
-			int l = 0;
-			int k = 0; // mekr Position des letzten Kommas
-			int s = 0; // mekr Position des letzten Semikolon
-			while (l < infix1.length()) {
-				switch (infix1.charAt(l)) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				case ',': {
-					if (b == 0) k = l;
-					break;
-				}
-				case ';': {
-					if (b == 0) s = l;
-					break;
-				}
-				}
-				l++;
-			}
-
-			if (s > 0) k = s; // wenn Semikolon gefunden, dann Semikolon nehmen, sonst komma nehmen nehmen
-			String infix2 = infix1.substring(k + 1);
-			infix1 = infix1.substring(0, k);
-			inp = "<table border=\"0\" cellspacing=\"0\" bordercolor=\"#000000\">\n";
-			inp = inp + "  <tr>\n    <td rowspan=\"2\">" + prefix + "</td>\n    ";
-			inp = inp + "<td style=\"border-bottom-style: solid; border-bottom-width: 1px\" align=\"center\">" + replaceFracs(infix1) + "</td>\n    ";
-			inp = inp + "<td rowspan=\"2\">" + replaceFracs(suffix) + "</td>\n  </tr>\n";
-			inp = inp + "  <tr><td align=\"center\">" + replaceFracs(infix2) + "</td>\n</tr></table>";
-		}
-		return inp;
-	}
-
-	private static String replaceRGBTags(String inp) {
-		int i = inp.indexOf("\\rgb{");
-		while (i > -1) {
-			int j = i + 5;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			inp = inp.substring(0, i) + "<font color=" + inp.substring(i + 5, i + 11) + ">" + inp.substring(i + 12, j - 1) + "</font>" + inp.substring(j);
-			i = inp.indexOf("\\rgb{");
-		}
-		return inp;
-	}
-
-	private static String replaceColorTags(String inp) {
-		int i = inp.indexOf("\\color{");
-		while (i > -1) {
-			int j = i + 7;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			inp = inp.substring(0, i) + "<font color=" + inp.substring(i + 11, i + 13) + inp.substring(i + 9, i + 11) + inp.substring(i + 7, i + 9) + ">" + inp.substring(i + 14, j - 1) + "</font>" + inp.substring(j);
-			i = inp.indexOf("\\color{");
-		}
-		return inp;
-	}
-
-	private static String replaceBoldSymbols(String inp) {
-		int i = inp.indexOf("\\bold{");
-		while (i > -1) {
-			int j = i + 6;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			inp = inp.substring(0, i) + "<b>" + inp.substring(i + 6, j - 1) + "</b>" + inp.substring(j);
-			i = inp.indexOf("\\bold{");
-		}
-		return inp;
-	}
-
-	private static String replaceTypeSymbols(String inp) {
-		int i = inp.indexOf("\\type{");
-		while (i > -1) {
-			int j = i + 6;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			inp = inp.substring(0, i) + "<font face=courier>" + inp.substring(i + 6, j - 1) + "</font>" + inp.substring(j);
-			i = inp.indexOf("\\type{");
-		}
-		return inp;
-	}
-
-	private static String replaceItalicSymbols(String inp) {
-		int i = inp.indexOf("\\it{");
-		while (i > -1) {
-			int j = i + 4;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			inp = inp.substring(0, i) + "<i>" + inp.substring(i + 4, j - 1) + "</i>" + inp.substring(j);
-			i = inp.indexOf("\\it{");
-		}
-		return inp;
-	}
-
 	private static String replaceSubscriptSymbols(String inp) {
 		int i = inp.indexOf("\\_{");
 		while (i > -1) {
@@ -461,117 +471,6 @@ public class Formula { // ------------------
 			}
 			inp = inp.substring(0, i) + "<sub>" + inp.substring(i + 3, j - 1) + "</sub>" + inp.substring(j);
 			i = inp.indexOf("\\_{");
-		}
-		return inp;
-	}
-
-	private static String replaceUnderlinedSymbols(String inp) {
-		int i = inp.indexOf("\\underline{");
-		while (i > -1) {
-			int j = i + 11;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			inp = inp.substring(0, i) + "<u>" + inp.substring(i + 11, j - 1) + "</u>" + inp.substring(j);
-			i = inp.indexOf("\\underline{");
-		}
-		return inp;
-	}
-
-	private static String replaceSymbolsWithArrow(String inp) {
-		int i = inp.indexOf("\\arrow{");
-		while (i > -1) {
-			int j = i + 7;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			inp = inp.substring(0, i) + "<span style=\"text-decoration: overline\">" + inp.substring(i + 7, j - 1) + "</span><sup><sup>&gt;</sup></sup>" + inp.substring(j);
-			i = inp.indexOf("\\arrow{");
-		}
-		return inp;
-	}
-
-	private static String replaceRootedSymbols(String inp) {
-		int i = inp.indexOf("\\root{");
-		while (i > -1) {
-			int j = i + 6;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			String infix = inp.substring(i + 6, j - 1);
-			System.out.println(infix);
-			b = 0;
-			int l = 0;
-			int k = 0; // mekr Position des letzten Kommas
-			int s = 0; // mekr Position des letzten Semikolon
-			while (l < infix.length()) {
-				switch (infix.charAt(l)) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				case ',': {
-					if (b == 0) k = l;
-				}
-				case ';': {
-					if (b == 0) s = l;
-				}
-				}
-				l++;
-			}
-			if (s + k > 0) {
-				if (s > 0) k = s; // wenn Semikolon gefunden, dann Semikolon nehmen, sonst komma nehmen nehmen
-				String rad = infix.substring(0, k);
-				infix = infix.substring(k + 1);
-				System.out.println(rad);
-				System.out.println(infix);
-				inp = inp.substring(0, i) + "<sup>" + rad + "</sup>&radic;<span style=\"text-decoration: overline\">" + infix + "</span>" + inp.substring(j);
-			} else
-				inp = inp.substring(0, i) + "&radic;<span style=\"text-decoration: overline\">" + infix + "</span>" + inp.substring(j);
-			i = inp.indexOf("\\root{");
 		}
 		return inp;
 	}
@@ -602,6 +501,125 @@ public class Formula { // ------------------
 		return inp;
 	}
 
+	private static String replaceSymbolsWithArrow(String inp) {
+		int i = inp.indexOf("\\arrow{");
+		while (i > -1) {
+			int j = i + 7;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			inp = inp.substring(0, i) + "<span style=\"text-decoration: overline\">" + inp.substring(i + 7, j - 1) + "</span><sup><sup>&gt;</sup></sup>" + inp.substring(j);
+			i = inp.indexOf("\\arrow{");
+		}
+		return inp;
+	}
+
+	private static String replaceTypeSymbols(String inp) {
+		int i = inp.indexOf("\\type{");
+		while (i > -1) {
+			int j = i + 6;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			inp = inp.substring(0, i) + "<font face=courier>" + inp.substring(i + 6, j - 1) + "</font>" + inp.substring(j);
+			i = inp.indexOf("\\type{");
+		}
+		return inp;
+	}
+
+	private static String replaceUnderlinedSymbols(String inp) {
+		int i = inp.indexOf("\\underline{");
+		while (i > -1) {
+			int j = i + 11;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			inp = inp.substring(0, i) + "<u>" + inp.substring(i + 11, j - 1) + "</u>" + inp.substring(j);
+			i = inp.indexOf("\\underline{");
+		}
+		return inp;
+	}
+
+	private static String StrReplace(String source, String pattern, String news) {
+		int i = source.indexOf(pattern);
+		while (i > -1) {
+			source = source.substring(0, i) + news + source.substring(i + pattern.length());
+			i = source.indexOf(pattern);
+		}
+		return source;
+	} // <font face=symbol></font>
+
+	private String code;
+
+	private int height;
+
+	private int width;
+
+	private boolean boxDrawn = false;
+
+	/***************************** Konstruktor ************************************/
+	public Formula(String newCode) {
+		code = doReplacements(newCode);
+		resetDimension();
+	}
+
+	public void draw(Graphics g, int x, int y) {
+		internDraw(g, new Point(x, y), true);
+	}
+
+	public void draw(Graphics g, Point pos) {
+		// Zeichnet die Formel/den Text mit der linken oberen Ecke an Pos
+		internDraw(g, pos, true);
+	}
+
+	public int getHeight(Graphics g) {
+		if (height == -1) {
+			Dimension size = internDraw(g, new Point(10, 10), false);
+			height = size.height;
+			width = size.width;
+		}
+		return height;
+	}
+
 	public String getHtmCode() {
 		String result = connectBrackets(code);
 		result = replaceSpecialSigns(result);
@@ -619,24 +637,6 @@ public class Formula { // ------------------
 		result = replaceFracs(result);
 		result = StrReplace(result, "~CASES~", "<td style=\"border-left-style: solid; border-left-width: 2px\">");
 		return result;
-	}
-
-	public int getHeight(Graphics g) {
-		if (height == -1) {
-			Dimension size = internDraw(g, new Point(10, 10), false);
-			height = size.height;
-			width = size.width;
-		}
-		return height;
-	}
-
-	public int getWidth(Graphics g) {
-		if (width == -1) {
-			Dimension size = internDraw(g, new Point(10, 10), false);
-			height = size.height;
-			width = size.width;
-		}
-		return width;
 	}
 
 	public Dimension getSize(Graphics g) {
@@ -691,6 +691,22 @@ public class Formula { // ------------------
 		return text; // hier muss noch Konvertierung stattfinden
 	}
 
+	public int getWidth(Graphics g) {
+		if (width == -1) {
+			Dimension size = internDraw(g, new Point(10, 10), false);
+			height = size.height;
+			width = size.width;
+		}
+		return width;
+	}
+
+	/***************************** Konstruktor ************************************/
+	/***************************** Initialisierung ********************************/
+	public void resetDimension() {
+		height = -1;
+		width = -1;
+	}
+
 	public String toString() {
 		return code;
 	}
@@ -706,59 +722,6 @@ public class Formula { // ------------------
 		return source.substring(pos + 1);
 	}
 
-	/****************************** Hilfsoperationen ******************************/
-	/***************************** Zeichenoperationen *****************************/
-	private Dimension outText(Graphics g, int x, int y, String tx, boolean visible) {
-		FontMetrics fm = g.getFontMetrics();
-		int fontHeight = fm.getHeight();
-		y += (5 * fontHeight) / 6;
-		int breakIndex = tx.indexOf("##");
-		while ((breakIndex > 0) && (tx.charAt(breakIndex - 1) == '\\')) {
-			tx = delete(tx, breakIndex - 1);
-			breakIndex = tx.indexOf("##", breakIndex + 1);
-		}
-		if (breakIndex == -1) { // tx enth�lt keine einfachen Zeilenumbr�che
-			if (visible) {
-				g.drawString(tx, x, y);
-			}
-			return new Dimension(fm.stringWidth(tx), fm.getHeight());
-		} else { // tx enth�lt einfache Zeilenumbr�che
-			Dimension result = new Dimension(0, 0);
-			int j = 0;
-			while (breakIndex != -1) {
-				String outTx = tx.substring(j, breakIndex);
-				if (visible) g.drawString(outTx, x, y);
-				y += fontHeight;
-				result.height += fontHeight;
-				result.width = Math.max(fm.stringWidth(outTx), result.width);
-				j = breakIndex + 2;
-				breakIndex = tx.indexOf("##", j);
-			}
-			String outTx = tx.substring(j);
-			if (visible) g.drawString(outTx, x, y);
-			y += fontHeight;
-			result.height += fontHeight;
-			result.width = Math.max(fm.stringWidth(outTx), result.width);
-			return result;
-		}
-	}
-
-	private void drawBoxes(Graphics g, Dimension Box1, Dimension Box2, Dimension Box3, Point pos, String fS, String cmd, String tS) {
-		int maxHeight = Math.max(Math.max(Box1.height, Box2.height), Box3.height);
-		outText(g, pos.x, pos.y + (maxHeight - Box1.height) / 2, fS, true);
-		outText(g, pos.x + Box1.width, pos.y + (maxHeight - Box2.height) / 2, cmd, true);
-		formulaLine(g, pos.x + Box1.width + Box2.width, pos.y + (maxHeight - Box3.height) / 2, tS, true);
-		boxDrawn = true;
-	}
-
-	private Dimension drawSmaller(Graphics g, Point origin, String param, boolean visible) {
-		Font cf = g.getFont();
-		g.setFont(new Font(cf.getFontName(), cf.getStyle(), (cf.getSize() * 3) / 4));
-		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
-		g.setFont(cf);
-		return result;
-	}
-
 	private Dimension drawBigger(Graphics g, Point origin, String param, boolean visible) {
 		Font cf = g.getFont();
 		g.setFont(new Font(cf.getFontName(), cf.getStyle(), (cf.getSize() * 4) / 3));
@@ -767,24 +730,46 @@ public class Formula { // ------------------
 		return result;
 	}
 
-	private Dimension drawHigher(Graphics g, Point origin, String param, boolean visible) {
-		// Zeichnet den �bergebenen Abschnitt hochgestellt
-		Font cf = g.getFont();
-		g.setFont(new Font(cf.getFontName(), cf.getStyle(), (cf.getSize() * 3) / 4));
-		Dimension result = formulaLine(g, origin.x, origin.y - cf.getSize() / 3, param, visible);
-		result.height *= 1.2;
-		g.setFont(cf);
-		return result;
-	}
-
-	private Dimension drawLower(Graphics g, Point origin, String param, boolean visible) {
-		// Zeichnet den �bergebenen Abschnitt tiefergestellt
-		Font cf = g.getFont();
-		int fontHeight = g.getFontMetrics().getHeight();
-		g.setFont(new Font(cf.getFontName(), cf.getStyle(), (cf.getSize() * 3) / 4));
-		Dimension result = formulaLine(g, origin.x, origin.y + fontHeight / 2 + cf.getSize() / 5, param, visible);
-		result.height *= 1.8;
-		g.setFont(cf);
+	private Dimension drawBlock(Graphics g, Point origin, String param, boolean visible) {
+		int beginIndex = 0;
+		int endIndex = param.indexOf(';');
+		Dimension result = new Dimension(0, 0);
+		if (endIndex < 0) { // Keine Trennung mit Semikolons
+			endIndex = param.indexOf(',');
+			if (endIndex < 0) { // �berhaupt keine Trennung
+				result = formulaLine(g, origin.x, origin.y, param, visible);
+			} else { // Trennung mit Kommata
+				result = formulaLine(g, origin.x, origin.y, param.substring(beginIndex, endIndex), visible);
+				beginIndex = endIndex + 1;
+				endIndex = param.indexOf(',', beginIndex);
+				while (endIndex > -1) {
+					Dimension lineDim = formulaLine(g, origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
+					result.width = Math.max(result.width, lineDim.width);
+					result.height += lineDim.height;
+					beginIndex = endIndex + 1;
+					endIndex = param.indexOf(',', beginIndex);
+				}
+				endIndex = param.length();
+				Dimension lineDim = formulaLine(g, origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
+				result.width = Math.max(result.width, lineDim.width);
+				result.height += lineDim.height;
+			}
+		} else { // Trennung mittels Semikolons
+			result = formulaLine(g, origin.x, origin.y, param.substring(beginIndex, endIndex), visible);
+			beginIndex = endIndex + 1;
+			endIndex = param.indexOf(';', beginIndex);
+			while (endIndex > -1) {
+				Dimension lineDim = formulaLine(g, origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
+				result.width = Math.max(result.width, lineDim.width);
+				result.height += lineDim.height;
+				beginIndex = endIndex + 1;
+				endIndex = param.indexOf(';', beginIndex);
+			}
+			endIndex = param.length();
+			Dimension lineDim = formulaLine(g, origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
+			result.width = Math.max(result.width, lineDim.width);
+			result.height += lineDim.height;
+		}
 		return result;
 	}
 
@@ -797,58 +782,12 @@ public class Formula { // ------------------
 		return result;
 	}
 
-	private Dimension drawItalic(Graphics g, Point origin, String param, boolean visible) {
-		// Zeichnet den �bergebenen Abschnitt kursiv
-		Font cf = g.getFont();
-		g.setFont(new Font(cf.getFontName(), cf.getStyle() | Font.ITALIC, cf.getSize()));
-		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
-		g.setFont(cf);
-		return result;
-	}
-
-	private Dimension drawTyped(Graphics g, Point origin, String param, boolean visible) {
-		// Zeichnet den �bergebenen Abschnitt typisiert
-		Font cf = g.getFont();
-		g.setFont(new Font("Monospaced", cf.getStyle(), cf.getSize()));
-		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
-		g.setFont(cf);
-		return result;
-	}
-
-	private Dimension drawColored(Graphics g, Point origin, String param, boolean visible) {
-		// Zeichnet den �bergebenen Abschnitt farbig
-		Color prev = g.getColor();
-		int r = 0;
-		int y = 0;
-		int b = 0;
-		try {
-			r = Integer.decode("0x" + param.substring(4, 6)).intValue();
-			y = Integer.decode("0x" + param.substring(2, 4)).intValue();
-			b = Integer.decode("0x" + param.substring(0, 2)).intValue();
-		} catch (Exception e) {}
-		g.setColor(new Color(r, y, b));
-		int komma = param.indexOf(',');
-		Dimension result = formulaLine(g, origin.x, origin.y, (komma > -1) ? param.substring(komma + 1) : ("\\ color{" + param), visible);
-		g.setColor(prev);
-		return result;
-	}
-
-	private Dimension drawRGBColored(Graphics g, Point origin, String param, boolean visible) {
-		// Zeichnet den �bergebenen Abschnitt farbig
-		Color prev = g.getColor();
-		int r = 0;
-		int y = 0;
-		int b = 0;
-		try {
-			r = Integer.decode("0x" + param.substring(0, 2)).intValue();
-			y = Integer.decode("0x" + param.substring(2, 4)).intValue();
-			b = Integer.decode("0x" + param.substring(4, 6)).intValue();
-		} catch (Exception e) {}
-		g.setColor(new Color(r, y, b));
-		int komma = param.indexOf(',');
-		Dimension result = formulaLine(g, origin.x, origin.y, (komma > -1) ? param.substring(komma + 1) : ("\\ rgb{" + param), visible);
-		g.setColor(prev);
-		return result;
+	private void drawBoxes(Graphics g, Dimension Box1, Dimension Box2, Dimension Box3, Point pos, String fS, String cmd, String tS) {
+		int maxHeight = Math.max(Math.max(Box1.height, Box2.height), Box3.height);
+		outText(g, pos.x, pos.y + (maxHeight - Box1.height) / 2, fS, true);
+		outText(g, pos.x + Box1.width, pos.y + (maxHeight - Box2.height) / 2, cmd, true);
+		formulaLine(g, pos.x + Box1.width + Box2.width, pos.y + (maxHeight - Box3.height) / 2, tS, true);
+		boxDrawn = true;
 	}
 
 	private Dimension drawCases(Graphics g, Point origin, String param, boolean visible) {
@@ -904,6 +843,39 @@ public class Formula { // ------------------
 		return result;
 	}
 
+	private Dimension drawCeil(Graphics g, Point origin, String param, boolean visible) {
+		int dx = g.getFontMetrics().charWidth(' ') / 2;
+		Dimension result = formulaLine(g, origin.x + 5, origin.y + 3, param, visible);
+		if (visible) {
+			g.drawLine(origin.x + 2, origin.y + 4, origin.x + 2, origin.y + result.height);
+			g.drawLine(origin.x + 2, origin.y + 4, origin.x + dx + 2, origin.y + 4);
+
+			g.drawLine(origin.x + 7 + result.width, origin.y + 4, origin.x + 7 + result.width, origin.y + result.height);
+			g.drawLine(origin.x + 7 + result.width, origin.y + 4, origin.x + 7 + result.width - dx, origin.y + 4);
+		}
+		result.width += 9;
+		result.height += 3;
+		return result;
+	}
+
+	private Dimension drawColored(Graphics g, Point origin, String param, boolean visible) {
+		// Zeichnet den �bergebenen Abschnitt farbig
+		Color prev = g.getColor();
+		int r = 0;
+		int y = 0;
+		int b = 0;
+		try {
+			r = Integer.decode("0x" + param.substring(4, 6)).intValue();
+			y = Integer.decode("0x" + param.substring(2, 4)).intValue();
+			b = Integer.decode("0x" + param.substring(0, 2)).intValue();
+		} catch (Exception e) {}
+		g.setColor(new Color(r, y, b));
+		int komma = param.indexOf(',');
+		Dimension result = formulaLine(g, origin.x, origin.y, (komma > -1) ? param.substring(komma + 1) : ("\\ color{" + param), visible);
+		g.setColor(prev);
+		return result;
+	}
+
 	private Dimension drawDeterminant(Graphics g, Point origin, String param, boolean visible) {
 		Dimension result = drawBlock(g, origin, param, false);
 		int dist = 2;
@@ -915,98 +887,150 @@ public class Formula { // ------------------
 		result.width += 4 * dist;
 		return result;
 	}
-	
-	private Dimension drawRBlock(Graphics g, Point origin, String param, boolean visible) {		
-		int width=drawBlock(g, origin, param, false).width;
-		int beginIndex = 0;
-		int endIndex = param.indexOf(';');
-		Dimension result = new Dimension(0, 0);
-		if (endIndex < 0) { // Keine Trennung mit Semikolons
-			endIndex = param.indexOf(',');
-			if (endIndex < 0) { // �berhaupt keine Trennung
-				int w=formulaLine(g, origin, param, false).width;
-				result = formulaLine(g, width-w+origin.x, origin.y, param, visible);
-			} else { // Trennung mit Kommata
-				int w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
-				result = formulaLine(g, width-w+origin.x, origin.y, param.substring(beginIndex, endIndex), visible);
-				beginIndex = endIndex + 1;
-				endIndex = param.indexOf(',', beginIndex);
-				while (endIndex > -1) {
-					w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
-					Dimension lineDim = formulaLine(g, width-w+origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
-					result.width = Math.max(result.width, lineDim.width);
-					result.height += lineDim.height;
-					beginIndex = endIndex + 1;
-					endIndex = param.indexOf(',', beginIndex);
-				}
-				endIndex = param.length();
-				w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
-				Dimension lineDim = formulaLine(g, width-w+origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
-				result.width = Math.max(result.width, lineDim.width);
-				result.height += lineDim.height;
-			}
-		} else { // Trennung mittels Semikolons
-			int w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
-			result = formulaLine(g, width-w+origin.x, origin.y, param.substring(beginIndex, endIndex), visible);
-			beginIndex = endIndex + 1;
-			endIndex = param.indexOf(';', beginIndex);
-			while (endIndex > -1) {
-				w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
-				Dimension lineDim = formulaLine(g, width-w+origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
-				result.width = Math.max(result.width, lineDim.width);
-				result.height += lineDim.height;
-				beginIndex = endIndex + 1;
-				endIndex = param.indexOf(';', beginIndex);
-			}
-			endIndex = param.length();
-			w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
-			Dimension lineDim = formulaLine(g, width-w+origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
-			result.width = Math.max(result.width, lineDim.width);
-			result.height += lineDim.height;
+
+	private Dimension drawFloor(Graphics g, Point origin, String param, boolean visible) {
+		int dx = g.getFontMetrics().charWidth(' ') / 2;
+		Dimension result = formulaLine(g, origin.x + 5, origin.y, param, visible);
+		if (visible) {
+			g.drawLine(origin.x + 2, origin.y + 4, origin.x + 2, origin.y + result.height);
+			g.drawLine(origin.x + 2, origin.y + result.height, origin.x + dx + 2, origin.y + result.height);
+
+			g.drawLine(origin.x + 7 + result.width, origin.y + 4, origin.x + 7 + result.width, origin.y + result.height);
+			g.drawLine(origin.x + 7 + result.width, origin.y + result.height, origin.x + 7 + result.width - dx, origin.y + result.height);
 		}
+		result.width += 9;
+		result.height += 2;
 		return result;
 	}
 
-	private Dimension drawBlock(Graphics g, Point origin, String param, boolean visible) {
-		int beginIndex = 0;
-		int endIndex = param.indexOf(';');
-		Dimension result = new Dimension(0, 0);
-		if (endIndex < 0) { // Keine Trennung mit Semikolons
-			endIndex = param.indexOf(',');
-			if (endIndex < 0) { // �berhaupt keine Trennung
-				result = formulaLine(g, origin.x, origin.y, param, visible);
-			} else { // Trennung mit Kommata
-				result = formulaLine(g, origin.x, origin.y, param.substring(beginIndex, endIndex), visible);
-				beginIndex = endIndex + 1;
-				endIndex = param.indexOf(',', beginIndex);
-				while (endIndex > -1) {
-					Dimension lineDim = formulaLine(g, origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
-					result.width = Math.max(result.width, lineDim.width);
-					result.height += lineDim.height;
-					beginIndex = endIndex + 1;
-					endIndex = param.indexOf(',', beginIndex);
-				}
-				endIndex = param.length();
-				Dimension lineDim = formulaLine(g, origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
-				result.width = Math.max(result.width, lineDim.width);
-				result.height += lineDim.height;
-			}
-		} else { // Trennung mittels Semikolons
-			result = formulaLine(g, origin.x, origin.y, param.substring(beginIndex, endIndex), visible);
-			beginIndex = endIndex + 1;
-			endIndex = param.indexOf(';', beginIndex);
-			while (endIndex > -1) {
-				Dimension lineDim = formulaLine(g, origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
-				result.width = Math.max(result.width, lineDim.width);
-				result.height += lineDim.height;
-				beginIndex = endIndex + 1;
-				endIndex = param.indexOf(';', beginIndex);
-			}
-			endIndex = param.length();
-			Dimension lineDim = formulaLine(g, origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
-			result.width = Math.max(result.width, lineDim.width);
-			result.height += lineDim.height;
+	/** Zeichnet einen Bruch **/
+	private Dimension drawFrac(Graphics g, Point origin, String param, boolean visible) {
+		String[] paras = nextPara(param);
+		String zs = paras[0];
+		String ns = (paras.length > 1) ? paras[1] : "";
+
+		Dimension zdim = formulaLine(g, origin, zs, false);
+		Dimension ndim = formulaLine(g, origin, ns, false);
+		Dimension result = new Dimension(Math.max(zdim.width, ndim.width), ndim.height + zdim.height);
+		if (visible) {
+			formulaLine(g, new Point(origin.x + (result.width - zdim.width) / 2, origin.y), zs, true);
+			formulaLine(g, new Point(origin.x + (result.width - ndim.width) / 2, origin.y + zdim.height), ns, true);
+			g.drawLine(origin.x, origin.y + zdim.height, origin.x + result.width, origin.y + zdim.height);
 		}
+		return result;
+	}
+	
+	private Dimension drawHigher(Graphics g, Point origin, String param, boolean visible) {
+		// Zeichnet den �bergebenen Abschnitt hochgestellt
+		Font cf = g.getFont();
+		g.setFont(new Font(cf.getFontName(), cf.getStyle(), (cf.getSize() * 3) / 4));
+		Dimension result = formulaLine(g, origin.x, origin.y - cf.getSize() / 3, param, visible);
+		result.height *= 1.2;
+		g.setFont(cf);
+		return result;
+	}
+
+	private Dimension drawIntervall(Graphics g, Point origin, String param, boolean visible) {
+		Font cf = g.getFont();
+		int fontHeight = g.getFontMetrics().getHeight();
+
+		String[] paras = nextPara(param);
+		String lower = paras[0];
+		if (lower.equals("")) lower = null;
+		String upper = null;
+		if (paras.length > 1) {
+			upper = paras[1];
+		}
+
+		g.setFont(new Font(cf.getFontName(), cf.getStyle(), fontHeight * 4 / 3));
+
+		g.setFont(cf);
+
+		g.setFont(new Font(cf.getFontName(), cf.getStyle(), fontHeight / 2));
+		Dimension upperD = formulaLine(g, origin, upper, false);
+		Dimension lowerD = formulaLine(g, origin, lower, false);
+
+		int resX = Math.max(upperD.width, lowerD.width) + 5;
+		int resY = fontHeight * 3;
+
+		if (visible) {
+			formulaLine(g, origin.x + 5, origin.y, upper, true);
+			formulaLine(g, origin.x + 5, origin.y + resY - upperD.height, lower, true);
+			g.setFont(new Font(cf.getFontName(), cf.getStyle(), fontHeight * 4 / 3));
+			g.drawLine(origin.x + 2, origin.y + fontHeight / 5, origin.x + 2, origin.y + resY - fontHeight / 5);
+		}
+		g.setFont(cf);
+		return new Dimension(resX, resY);
+	}
+
+	/** Zum Zeichnen von Summen, Produkten und Integralen **/
+	/**
+	 * old code private Dimension drawIntervallSign(Graphics g, Point origin, String param, String sign,boolean visible){ if (param.equals("")) return formulaLine(g,origin,sign+param,visible);
+	 * 
+	 * Font cf=g.getFont(); int fontHeight=g.getFontMetrics().getHeight();
+	 * 
+	 * String[] paras=nextPara(param); String lower=paras[0]; if (lower.equals("")) lower=null; String upper=null; if (paras.length>1){ upper=paras[1]; } Dimension upperD=formulaLine(g,origin,upper,false); Dimension lowerD=formulaLine(g,origin,lower,false);
+	 * 
+	 * g.setFont(new Font(cf.getFontName(),cf.getStyle(),fontHeight*4/3)); Dimension sumD=formulaLine(g,origin,sign,false); g.setFont(cf);
+	 * 
+	 * int resX=Math.max(sumD.width,Math.max(upperD.width,lowerD.width)); int resY=sumD.height+upperD.height+lowerD.height;
+	 * 
+	 * if (visible){ formulaLine(g,origin.x+(resX-upperD.width)/2,origin.y,upper,true); formulaLine(g,origin.x+(resX-lowerD.width)/2,origin.y+upperD.height+sumD.height,lower,true); g.setFont(new Font(cf.getFontName(),cf.getStyle(),fontHeight*4/3)); formulaLine(g,origin.x+(resX-sumD.width)/2,origin.y+upperD.height,sign,true); g.setFont(cf); } return new Dimension(resX,resY); } old code
+	 **/
+
+	private Dimension drawIntervallSign(Graphics g, Point origin, String param, String sign, boolean visible) {
+		if (param.equals("")) return formulaLine(g, origin, sign + param, visible);
+
+		Font cf = g.getFont();
+		int fontHeight = g.getFontMetrics().getHeight();
+
+		String[] paras = nextPara(param);
+		String lower = paras[0];
+		if (lower.equals("")) lower = null;
+		String upper = null;
+		if (paras.length > 1) {
+			upper = paras[1];
+		}
+
+		g.setFont(new Font(cf.getFontName(), cf.getStyle(), fontHeight * 4 / 3));
+		Dimension sumD = formulaLine(g, origin, sign, false);
+
+		g.setFont(cf);
+
+		g.setFont(new Font(cf.getFontName(), cf.getStyle(), fontHeight / 2));
+		Dimension upperD = formulaLine(g, origin, upper, false);
+		Dimension lowerD = formulaLine(g, origin, lower, false);
+
+		int resX = Math.max(sumD.width, Math.max(upperD.width, lowerD.width));
+		int resY = sumD.height + upperD.height / 3 + lowerD.height;
+
+		if (visible) {
+			formulaLine(g, origin.x + (resX - upperD.width) / 2, origin.y, upper, true);
+			formulaLine(g, origin.x + (resX - lowerD.width) / 2, origin.y + upperD.height * 1 / 4 + sumD.height, lower, true);
+			g.setFont(new Font(cf.getFontName(), cf.getStyle(), fontHeight * 4 / 3));
+			formulaLine(g, origin.x + (resX - sumD.width) / 2, origin.y + upperD.height * 1 / 2, sign, true);
+		}
+		g.setFont(cf);
+		return new Dimension(resX, resY);
+	}
+	
+	private Dimension drawItalic(Graphics g, Point origin, String param, boolean visible) {
+		// Zeichnet den �bergebenen Abschnitt kursiv
+		Font cf = g.getFont();
+		g.setFont(new Font(cf.getFontName(), cf.getStyle() | Font.ITALIC, cf.getSize()));
+		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
+		g.setFont(cf);
+		return result;
+	}
+
+	private Dimension drawLower(Graphics g, Point origin, String param, boolean visible) {
+		// Zeichnet den �bergebenen Abschnitt tiefergestellt
+		Font cf = g.getFont();
+		int fontHeight = g.getFontMetrics().getHeight();
+		g.setFont(new Font(cf.getFontName(), cf.getStyle(), (cf.getSize() * 3) / 4));
+		Dimension result = formulaLine(g, origin.x, origin.y + fontHeight / 2 + cf.getSize() / 5, param, visible);
+		result.height *= 1.8;
+		g.setFont(cf);
 		return result;
 	}
 
@@ -1062,22 +1086,6 @@ public class Formula { // ------------------
 		result.width += 20;
 		return result;
 	}
-	
-	private Dimension drawStriked(Graphics g, Point origin, String param, boolean visible) {
-		// Zeichnet den �bergebenen Abschnitt unterstrichen
-		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
-		if (visible) g.drawLine(origin.x, origin.y + result.height/2, origin.x + result.width, origin.y + result.height/2);
-		result.height++;
-		return result;
-	}
-
-	private Dimension drawUnderlined(Graphics g, Point origin, String param, boolean visible) {
-		// Zeichnet den �bergebenen Abschnitt unterstrichen
-		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
-		if (visible) g.drawLine(origin.x, origin.y + result.height, origin.x + result.width, origin.y + result.height);
-		result.height++;
-		return result;
-	}
 
 	private Dimension drawOverlined(Graphics g, Point origin, String param, boolean visible) {
 		// Zeichnet den �bergebenen Abschnitt �berstrichen
@@ -1085,233 +1093,6 @@ public class Formula { // ------------------
 		if (visible) g.drawLine(origin.x, origin.y + 2, origin.x + result.width, origin.y + 2);
 		result.height++;
 		return result;
-	}
-
-	private Dimension drawVector(Graphics g, Point origin, String param, boolean visible) {
-		// Zeichnet den �bergebenen Abschnitt �berstrichen
-		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
-		int s = g.getFont().getSize() / 6;
-
-		if (visible) {
-			g.drawLine(origin.x, origin.y + s, origin.x + result.width, origin.y + s);
-			g.drawLine(origin.x + result.width - s, origin.y, origin.x + result.width, origin.y + s);
-			g.drawLine(origin.x + result.width - s, origin.y + s + s, origin.x + result.width, origin.y + s);
-		}
-		result.height++;
-		return result;
-	}
-
-	private Dimension drawWithHat(Graphics g, Point origin, String param, boolean visible) {
-		// Zeichnet den �bergebenen Abschnitt �berstrichen
-		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
-		if (visible) {
-			g.drawLine(origin.x, origin.y + 2, origin.x + result.width / 2, origin.y);
-			g.drawLine(origin.x + result.width / 2, origin.y, origin.x + result.width, origin.y + 2);
-		}
-		result.height++;
-		return result;
-	}
-
-	private Dimension drawWithTilde(Graphics g, Point origin, String param, boolean visible) {
-		// Zeichnet den �bergebenen Abschnitt �berstrichen
-		int i = g.getFont().getSize() / 2;
-		Dimension dummy = formulaLine(g, origin.x, origin.y - i, "~", visible);
-		Dimension result = formulaLine(g, origin.x, origin.y + dummy.height / 6, param, visible);
-		result.height = result.height + dummy.height / 3;
-		return result;
-	}
-
-	private Dimension drawWithDot(Graphics g, Point origin, String param, boolean visible) {
-		// Zeichnet den �bergebenen Abschnitt �berstrichen
-		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
-		if (visible) {
-			g.drawOval(origin.x + result.width / 2 - 2, origin.y + 1, 3, 3);
-			// g.drawLine(origin.x,origin.y+2,origin.x+result.width/2,origin.y);
-			// g.drawLine(origin.x+result.width/2,origin.y,origin.x+result.width,origin.y+2);
-		}
-		result.height++;
-		return result;
-	}
-
-	private Dimension drawUnderArrow(Graphics g, Point origin, String param, boolean visible) {
-		// Zeichnet den �bergebenen Abschnitt �berstrichen
-		Dimension result = formulaLine(g, origin.x, origin.y + 3, param, visible);
-		if (visible) {
-			g.drawLine(origin.x, origin.y + 5, origin.x + result.width, origin.y + 5);
-			g.drawLine(origin.x + result.width, origin.y + 5, origin.x + result.width - 5, origin.y + 1);
-			g.drawLine(origin.x + result.width, origin.y + 5, origin.x + result.width - 5, origin.y + 9);
-		}
-		result.height += 3;
-		return result;
-	}
-
-	private String[] nextPara(String inp) {
-		int len = inp.length();
-		int komma = Integer.MAX_VALUE;
-		int semikolon = Integer.MAX_VALUE;
-		int i = len - 1;
-		int bracket = 0;
-		while (i >= 0) {
-			switch (inp.charAt(i)) {
-			case '{': {
-				bracket++;
-				break;
-			}
-			case '}': {
-				bracket--;
-				break;
-			}
-			case ',': {
-				if (bracket == 0) komma = i;
-				break;
-			}
-			case ';': {
-				if (bracket == 0) semikolon = i;
-				break;
-			}
-			}
-			i--;
-		}
-		int separator = (semikolon < Integer.MAX_VALUE) ? semikolon : komma;
-		String[] result = { inp };
-		if (separator < Integer.MAX_VALUE) {
-			String[] dummy = { inp.substring(0, separator), inp.substring(separator + 1) };
-			result = dummy;
-		}
-		return result;
-	}
-
-	/** Zeichnet einen Bruch **/
-	private Dimension drawFrac(Graphics g, Point origin, String param, boolean visible) {
-		String[] paras = nextPara(param);
-		String zs = paras[0];
-		String ns = (paras.length > 1) ? paras[1] : "";
-
-		Dimension zdim = formulaLine(g, origin, zs, false);
-		Dimension ndim = formulaLine(g, origin, ns, false);
-		Dimension result = new Dimension(Math.max(zdim.width, ndim.width), ndim.height + zdim.height);
-		if (visible) {
-			formulaLine(g, new Point(origin.x + (result.width - zdim.width) / 2, origin.y), zs, true);
-			formulaLine(g, new Point(origin.x + (result.width - ndim.width) / 2, origin.y + zdim.height), ns, true);
-			g.drawLine(origin.x, origin.y + zdim.height, origin.x + result.width, origin.y + zdim.height);
-		}
-		return result;
-	}
-
-	/** Zeichnet eine Wurzel **/
-	private Dimension drawRoot(Graphics g, Point origin, String param, boolean visible) {
-		String[] paras = nextPara(param);
-		String rad = paras[0];
-		String exp = " ";
-		if (paras.length > 1) { // Bruch mit explizit angegebenem Exponent
-			exp = rad;
-			rad = paras[1];
-		}
-		Dimension radD = formulaLine(g, origin, rad, false);
-		Font cf = g.getFont();
-		g.setFont(new Font(cf.getFontName(), cf.getStyle(), (cf.getSize() * 3) / 4));
-
-		Dimension expD = formulaLine(g, origin, exp, false);
-		Point expP = new Point(origin);
-		Point radP = new Point(origin.x + 5 + expD.width, origin.y);
-		if (expD.height < (radD.height / 2)) {
-			expP.y = origin.y + (radD.height / 2) - expD.height;
-		} else {
-			radP.y = origin.y + expD.height - (radD.height / 2);
-		}
-		if (visible) {
-			formulaLine(g, expP, exp, true);
-			g.setFont(cf);
-			formulaLine(g, radP, rad, true);
-			g.drawLine(expP.x, expP.y + expD.height, expP.x + expD.width, expP.y + expD.height);
-			g.drawLine(expP.x + expD.width, expP.y + expD.height, radP.x - 3, radP.y + radD.height - 2);
-			g.drawLine(radP.x - 3, radP.y + radD.height - 2, radP.x, radP.y + 2);
-			g.drawLine(radP.x, radP.y + 2, radP.x + radD.width, radP.y + 2);
-		} else
-			g.setFont(cf);
-
-		return new Dimension(radD.width + 5 + expD.width, Math.max(radD.height, expD.height + radD.height / 2));
-	}
-
-	private Dimension drawFloor(Graphics g, Point origin, String param, boolean visible) {
-		int dx = g.getFontMetrics().charWidth(' ') / 2;
-		Dimension result = formulaLine(g, origin.x + 5, origin.y, param, visible);
-		if (visible) {
-			g.drawLine(origin.x + 2, origin.y + 4, origin.x + 2, origin.y + result.height);
-			g.drawLine(origin.x + 2, origin.y + result.height, origin.x + dx + 2, origin.y + result.height);
-
-			g.drawLine(origin.x + 7 + result.width, origin.y + 4, origin.x + 7 + result.width, origin.y + result.height);
-			g.drawLine(origin.x + 7 + result.width, origin.y + result.height, origin.x + 7 + result.width - dx, origin.y + result.height);
-		}
-		result.width += 9;
-		result.height += 2;
-		return result;
-	}
-
-	private Dimension drawCeil(Graphics g, Point origin, String param, boolean visible) {
-		int dx = g.getFontMetrics().charWidth(' ') / 2;
-		Dimension result = formulaLine(g, origin.x + 5, origin.y + 3, param, visible);
-		if (visible) {
-			g.drawLine(origin.x + 2, origin.y + 4, origin.x + 2, origin.y + result.height);
-			g.drawLine(origin.x + 2, origin.y + 4, origin.x + dx + 2, origin.y + 4);
-
-			g.drawLine(origin.x + 7 + result.width, origin.y + 4, origin.x + 7 + result.width, origin.y + result.height);
-			g.drawLine(origin.x + 7 + result.width, origin.y + 4, origin.x + 7 + result.width - dx, origin.y + 4);
-		}
-		result.width += 9;
-		result.height += 3;
-		return result;
-	}
-
-	/** Zum Zeichnen von Summen, Produkten und Integralen **/
-	/**
-	 * old code private Dimension drawIntervallSign(Graphics g, Point origin, String param, String sign,boolean visible){ if (param.equals("")) return formulaLine(g,origin,sign+param,visible);
-	 * 
-	 * Font cf=g.getFont(); int fontHeight=g.getFontMetrics().getHeight();
-	 * 
-	 * String[] paras=nextPara(param); String lower=paras[0]; if (lower.equals("")) lower=null; String upper=null; if (paras.length>1){ upper=paras[1]; } Dimension upperD=formulaLine(g,origin,upper,false); Dimension lowerD=formulaLine(g,origin,lower,false);
-	 * 
-	 * g.setFont(new Font(cf.getFontName(),cf.getStyle(),fontHeight*4/3)); Dimension sumD=formulaLine(g,origin,sign,false); g.setFont(cf);
-	 * 
-	 * int resX=Math.max(sumD.width,Math.max(upperD.width,lowerD.width)); int resY=sumD.height+upperD.height+lowerD.height;
-	 * 
-	 * if (visible){ formulaLine(g,origin.x+(resX-upperD.width)/2,origin.y,upper,true); formulaLine(g,origin.x+(resX-lowerD.width)/2,origin.y+upperD.height+sumD.height,lower,true); g.setFont(new Font(cf.getFontName(),cf.getStyle(),fontHeight*4/3)); formulaLine(g,origin.x+(resX-sumD.width)/2,origin.y+upperD.height,sign,true); g.setFont(cf); } return new Dimension(resX,resY); } old code
-	 **/
-
-	private Dimension drawIntervallSign(Graphics g, Point origin, String param, String sign, boolean visible) {
-		if (param.equals("")) return formulaLine(g, origin, sign + param, visible);
-
-		Font cf = g.getFont();
-		int fontHeight = g.getFontMetrics().getHeight();
-
-		String[] paras = nextPara(param);
-		String lower = paras[0];
-		if (lower.equals("")) lower = null;
-		String upper = null;
-		if (paras.length > 1) {
-			upper = paras[1];
-		}
-
-		g.setFont(new Font(cf.getFontName(), cf.getStyle(), fontHeight * 4 / 3));
-		Dimension sumD = formulaLine(g, origin, sign, false);
-
-		g.setFont(cf);
-
-		g.setFont(new Font(cf.getFontName(), cf.getStyle(), fontHeight / 2));
-		Dimension upperD = formulaLine(g, origin, upper, false);
-		Dimension lowerD = formulaLine(g, origin, lower, false);
-
-		int resX = Math.max(sumD.width, Math.max(upperD.width, lowerD.width));
-		int resY = sumD.height + upperD.height / 3 + lowerD.height;
-
-		if (visible) {
-			formulaLine(g, origin.x + (resX - upperD.width) / 2, origin.y, upper, true);
-			formulaLine(g, origin.x + (resX - lowerD.width) / 2, origin.y + upperD.height * 1 / 4 + sumD.height, lower, true);
-			g.setFont(new Font(cf.getFontName(), cf.getStyle(), fontHeight * 4 / 3));
-			formulaLine(g, origin.x + (resX - sumD.width) / 2, origin.y + upperD.height * 1 / 2, sign, true);
-		}
-		g.setFont(cf);
-		return new Dimension(resX, resY);
 	}
 
 	/** Zeichnet parametrisierte Formel-Kommandos **/
@@ -1360,39 +1141,110 @@ public class Formula { // ------------------
 		return formulaLine(g, x, y, "\\ " + cmd + "{" + param + "}", visible);
 	}
 
-	private Dimension drawIntervall(Graphics g, Point origin, String param, boolean visible) {
-		Font cf = g.getFont();
-		int fontHeight = g.getFontMetrics().getHeight();
-
-		String[] paras = nextPara(param);
-		String lower = paras[0];
-		if (lower.equals("")) lower = null;
-		String upper = null;
-		if (paras.length > 1) {
-			upper = paras[1];
+	private Dimension drawRBlock(Graphics g, Point origin, String param, boolean visible) {		
+		int width=drawBlock(g, origin, param, false).width;
+		int beginIndex = 0;
+		int endIndex = param.indexOf(';');
+		Dimension result = new Dimension(0, 0);
+		if (endIndex < 0) { // Keine Trennung mit Semikolons
+			endIndex = param.indexOf(',');
+			if (endIndex < 0) { // �berhaupt keine Trennung
+				int w=formulaLine(g, origin, param, false).width;
+				result = formulaLine(g, width-w+origin.x, origin.y, param, visible);
+			} else { // Trennung mit Kommata
+				int w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
+				result = formulaLine(g, width-w+origin.x, origin.y, param.substring(beginIndex, endIndex), visible);
+				beginIndex = endIndex + 1;
+				endIndex = param.indexOf(',', beginIndex);
+				while (endIndex > -1) {
+					w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
+					Dimension lineDim = formulaLine(g, width-w+origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
+					result.width = Math.max(result.width, lineDim.width);
+					result.height += lineDim.height;
+					beginIndex = endIndex + 1;
+					endIndex = param.indexOf(',', beginIndex);
+				}
+				endIndex = param.length();
+				w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
+				Dimension lineDim = formulaLine(g, width-w+origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
+				result.width = Math.max(result.width, lineDim.width);
+				result.height += lineDim.height;
+			}
+		} else { // Trennung mittels Semikolons
+			int w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
+			result = formulaLine(g, width-w+origin.x, origin.y, param.substring(beginIndex, endIndex), visible);
+			beginIndex = endIndex + 1;
+			endIndex = param.indexOf(';', beginIndex);
+			while (endIndex > -1) {
+				w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
+				Dimension lineDim = formulaLine(g, width-w+origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
+				result.width = Math.max(result.width, lineDim.width);
+				result.height += lineDim.height;
+				beginIndex = endIndex + 1;
+				endIndex = param.indexOf(';', beginIndex);
+			}
+			endIndex = param.length();
+			w=formulaLine(g, origin, param.substring(beginIndex, endIndex), false).width;
+			Dimension lineDim = formulaLine(g, width-w+origin.x, origin.y + result.height, param.substring(beginIndex, endIndex), visible);
+			result.width = Math.max(result.width, lineDim.width);
+			result.height += lineDim.height;
 		}
-
-		g.setFont(new Font(cf.getFontName(), cf.getStyle(), fontHeight * 4 / 3));
-
-		g.setFont(cf);
-
-		g.setFont(new Font(cf.getFontName(), cf.getStyle(), fontHeight / 2));
-		Dimension upperD = formulaLine(g, origin, upper, false);
-		Dimension lowerD = formulaLine(g, origin, lower, false);
-
-		int resX = Math.max(upperD.width, lowerD.width) + 5;
-		int resY = fontHeight * 3;
-
-		if (visible) {
-			formulaLine(g, origin.x + 5, origin.y, upper, true);
-			formulaLine(g, origin.x + 5, origin.y + resY - upperD.height, lower, true);
-			g.setFont(new Font(cf.getFontName(), cf.getStyle(), fontHeight * 4 / 3));
-			g.drawLine(origin.x + 2, origin.y + fontHeight / 5, origin.x + 2, origin.y + resY - fontHeight / 5);
-		}
-		g.setFont(cf);
-		return new Dimension(resX, resY);
+		return result;
 	}
-	
+
+	private Dimension drawRGBColored(Graphics g, Point origin, String param, boolean visible) {
+		// Zeichnet den �bergebenen Abschnitt farbig
+		Color prev = g.getColor();
+		int r = 0;
+		int y = 0;
+		int b = 0;
+		try {
+			r = Integer.decode("0x" + param.substring(0, 2)).intValue();
+			y = Integer.decode("0x" + param.substring(2, 4)).intValue();
+			b = Integer.decode("0x" + param.substring(4, 6)).intValue();
+		} catch (Exception e) {}
+		g.setColor(new Color(r, y, b));
+		int komma = param.indexOf(',');
+		Dimension result = formulaLine(g, origin.x, origin.y, (komma > -1) ? param.substring(komma + 1) : ("\\ rgb{" + param), visible);
+		g.setColor(prev);
+		return result;
+	}
+
+	/** Zeichnet eine Wurzel **/
+	private Dimension drawRoot(Graphics g, Point origin, String param, boolean visible) {
+		String[] paras = nextPara(param);
+		String rad = paras[0];
+		String exp = " ";
+		if (paras.length > 1) { // Bruch mit explizit angegebenem Exponent
+			exp = rad;
+			rad = paras[1];
+		}
+		Dimension radD = formulaLine(g, origin, rad, false);
+		Font cf = g.getFont();
+		g.setFont(new Font(cf.getFontName(), cf.getStyle(), (cf.getSize() * 3) / 4));
+
+		Dimension expD = formulaLine(g, origin, exp, false);
+		Point expP = new Point(origin);
+		Point radP = new Point(origin.x + 5 + expD.width, origin.y);
+		if (expD.height < (radD.height / 2)) {
+			expP.y = origin.y + (radD.height / 2) - expD.height;
+		} else {
+			radP.y = origin.y + expD.height - (radD.height / 2);
+		}
+		if (visible) {
+			formulaLine(g, expP, exp, true);
+			g.setFont(cf);
+			formulaLine(g, radP, rad, true);
+			g.drawLine(expP.x, expP.y + expD.height, expP.x + expD.width, expP.y + expD.height);
+			g.drawLine(expP.x + expD.width, expP.y + expD.height, radP.x - 3, radP.y + radD.height - 2);
+			g.drawLine(radP.x - 3, radP.y + radD.height - 2, radP.x, radP.y + 2);
+			g.drawLine(radP.x, radP.y + 2, radP.x + radD.width, radP.y + 2);
+		} else
+			g.setFont(cf);
+
+		return new Dimension(radD.width + 5 + expD.width, Math.max(radD.height, expD.height + radD.height / 2));
+	}
+
 	private Dimension drawSet(Graphics g, Point origin, String param, boolean visible) {
 		int beginIndex = 0;
 		int endIndex = param.indexOf(';');
@@ -1457,12 +1309,103 @@ public class Formula { // ------------------
 		return result;
 	}
 
+	private Dimension drawSmaller(Graphics g, Point origin, String param, boolean visible) {
+		Font cf = g.getFont();
+		g.setFont(new Font(cf.getFontName(), cf.getStyle(), (cf.getSize() * 3) / 4));
+		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
+		g.setFont(cf);
+		return result;
+	}
+
+	private Dimension drawStriked(Graphics g, Point origin, String param, boolean visible) {
+		// Zeichnet den �bergebenen Abschnitt unterstrichen
+		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
+		if (visible) g.drawLine(origin.x, origin.y + result.height/2, origin.x + result.width, origin.y + result.height/2);
+		result.height++;
+		return result;
+	}
+
+	private Dimension drawTyped(Graphics g, Point origin, String param, boolean visible) {
+		// Zeichnet den �bergebenen Abschnitt typisiert
+		Font cf = g.getFont();
+		g.setFont(new Font("Monospaced", cf.getStyle(), cf.getSize()));
+		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
+		g.setFont(cf);
+		return result;
+	}
+
+	private Dimension drawUnderArrow(Graphics g, Point origin, String param, boolean visible) {
+		// Zeichnet den �bergebenen Abschnitt �berstrichen
+		Dimension result = formulaLine(g, origin.x, origin.y + 3, param, visible);
+		if (visible) {
+			g.drawLine(origin.x, origin.y + 5, origin.x + result.width, origin.y + 5);
+			g.drawLine(origin.x + result.width, origin.y + 5, origin.x + result.width - 5, origin.y + 1);
+			g.drawLine(origin.x + result.width, origin.y + 5, origin.x + result.width - 5, origin.y + 9);
+		}
+		result.height += 3;
+		return result;
+	}
+
+	private Dimension drawUnderlined(Graphics g, Point origin, String param, boolean visible) {
+		// Zeichnet den �bergebenen Abschnitt unterstrichen
+		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
+		if (visible) g.drawLine(origin.x, origin.y + result.height, origin.x + result.width, origin.y + result.height);
+		result.height++;
+		return result;
+	}
+
+	private Dimension drawVector(Graphics g, Point origin, String param, boolean visible) {
+		// Zeichnet den �bergebenen Abschnitt �berstrichen
+		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
+		int s = g.getFont().getSize() / 6;
+
+		if (visible) {
+			g.drawLine(origin.x, origin.y + s, origin.x + result.width, origin.y + s);
+			g.drawLine(origin.x + result.width - s, origin.y, origin.x + result.width, origin.y + s);
+			g.drawLine(origin.x + result.width - s, origin.y + s + s, origin.x + result.width, origin.y + s);
+		}
+		result.height++;
+		return result;
+	}
+
+	private Dimension drawWithDot(Graphics g, Point origin, String param, boolean visible) {
+		// Zeichnet den �bergebenen Abschnitt �berstrichen
+		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
+		if (visible) {
+			g.drawOval(origin.x + result.width / 2 - 2, origin.y + 1, 3, 3);
+			// g.drawLine(origin.x,origin.y+2,origin.x+result.width/2,origin.y);
+			// g.drawLine(origin.x+result.width/2,origin.y,origin.x+result.width,origin.y+2);
+		}
+		result.height++;
+		return result;
+	}
+	
+	private Dimension drawWithHat(Graphics g, Point origin, String param, boolean visible) {
+		// Zeichnet den �bergebenen Abschnitt �berstrichen
+		Dimension result = formulaLine(g, origin.x, origin.y, param, visible);
+		if (visible) {
+			g.drawLine(origin.x, origin.y + 2, origin.x + result.width / 2, origin.y);
+			g.drawLine(origin.x + result.width / 2, origin.y, origin.x + result.width, origin.y + 2);
+		}
+		result.height++;
+		return result;
+	}
+
+	private Dimension drawWithTilde(Graphics g, Point origin, String param, boolean visible) {
+		// Zeichnet den �bergebenen Abschnitt �berstrichen
+		int i = g.getFont().getSize() / 2;
+		Dimension dummy = formulaLine(g, origin.x, origin.y - i, "~", visible);
+		Dimension result = formulaLine(g, origin.x, origin.y + dummy.height / 6, param, visible);
+		result.height = result.height + dummy.height / 3;
+		return result;
+	}
+
 	/** Zeichnet eine Formel-Zeile **/
 	private Dimension formulaLine(Graphics g, int x, int y, String code, boolean visible) {
 		// Zeichnet eine Formel-Zeile
 		return formulaLine(g, new Point(x, y), code, visible);
 	}
-
+	
 	/** Zeichnet eine Formel-Zeile **/
 	private Dimension formulaLine(Graphics g, Point origin, String code, boolean visible) {
 		if ((code == null) || (code.equals(" "))) return new Dimension(0, 0);
@@ -1556,7 +1499,104 @@ public class Formula { // ------------------
 		result.height = Math.max(result.height, thirdBox.height);
 		return result;
 	}
-	
+
+	private Dimension internDraw(Graphics g, Point pos, boolean visible) {
+		// Zeichnet die Formel, linke Obere Ecke = pos
+		// pos.y+=(5*g.getFontMetrics().getHeight())/6;
+		if ((code == null) || (code.equals(" "))) return new Dimension(0, 0);
+		int i = code.indexOf("\\n "); // Test, ob Zeilenumbr�che vorhanden
+		if (i > -1) { // Zeilenumbruch vorhanden
+			int j = 0;
+			Dimension result = new Dimension(0, 0);
+			while (i > -1) {
+				Dimension lineDim = formulaLine(g, pos, code.substring(j, i), visible);
+				result.height += lineDim.height;
+				result.width = Math.max(lineDim.width, result.width);
+				pos.y += lineDim.height;
+				j = i + 3;
+				i = code.indexOf("\\n ", j);
+			}
+			Dimension lineDim = formulaLine(g, pos, code.substring(j), visible);
+			result.height += lineDim.height;
+			result.width = Math.max(lineDim.width, result.width);
+			return result;
+		} else
+			/* kein Zeilenumbruch vorhanden */return formulaLine(g, pos, code, visible);
+	}
+
+	private String[] nextPara(String inp) {
+		int len = inp.length();
+		int komma = Integer.MAX_VALUE;
+		int semikolon = Integer.MAX_VALUE;
+		int i = len - 1;
+		int bracket = 0;
+		while (i >= 0) {
+			switch (inp.charAt(i)) {
+			case '{': {
+				bracket++;
+				break;
+			}
+			case '}': {
+				bracket--;
+				break;
+			}
+			case ',': {
+				if (bracket == 0) komma = i;
+				break;
+			}
+			case ';': {
+				if (bracket == 0) semikolon = i;
+				break;
+			}
+			}
+			i--;
+		}
+		int separator = (semikolon < Integer.MAX_VALUE) ? semikolon : komma;
+		String[] result = { inp };
+		if (separator < Integer.MAX_VALUE) {
+			String[] dummy = { inp.substring(0, separator), inp.substring(separator + 1) };
+			result = dummy;
+		}
+		return result;
+	}
+
+	/****************************** Hilfsoperationen ******************************/
+	/***************************** Zeichenoperationen *****************************/
+	private Dimension outText(Graphics g, int x, int y, String tx, boolean visible) {
+		FontMetrics fm = g.getFontMetrics();
+		int fontHeight = fm.getHeight();
+		y += (5 * fontHeight) / 6;
+		int breakIndex = tx.indexOf("##");
+		while ((breakIndex > 0) && (tx.charAt(breakIndex - 1) == '\\')) {
+			tx = delete(tx, breakIndex - 1);
+			breakIndex = tx.indexOf("##", breakIndex + 1);
+		}
+		if (breakIndex == -1) { // tx enth�lt keine einfachen Zeilenumbr�che
+			if (visible) {
+				g.drawString(tx, x, y);
+			}
+			return new Dimension(fm.stringWidth(tx), fm.getHeight());
+		} else { // tx enth�lt einfache Zeilenumbr�che
+			Dimension result = new Dimension(0, 0);
+			int j = 0;
+			while (breakIndex != -1) {
+				String outTx = tx.substring(j, breakIndex);
+				if (visible) g.drawString(outTx, x, y);
+				y += fontHeight;
+				result.height += fontHeight;
+				result.width = Math.max(fm.stringWidth(outTx), result.width);
+				j = breakIndex + 2;
+				breakIndex = tx.indexOf("##", j);
+			}
+			String outTx = tx.substring(j);
+			if (visible) g.drawString(outTx, x, y);
+			y += fontHeight;
+			result.height += fontHeight;
+			result.width = Math.max(fm.stringWidth(outTx), result.width);
+			return result;
+		}
+	}
+
 	String doReplacements(String input){
 		input=input.replace("\\> ", "\u227b");
 		input=input.replace("\\< ", "\u227a");
@@ -1700,45 +1740,5 @@ public class Formula { // ------------------
 		input=input.replace("\\zeta " ,"\u03b6");
 		input=input.replace("\\Zeta ", "\u0396");
 		return input;
-	}
-
-	private Dimension internDraw(Graphics g, Point pos, boolean visible) {
-		// Zeichnet die Formel, linke Obere Ecke = pos
-		// pos.y+=(5*g.getFontMetrics().getHeight())/6;
-		if ((code == null) || (code.equals(" "))) return new Dimension(0, 0);
-		int i = code.indexOf("\\n "); // Test, ob Zeilenumbr�che vorhanden
-		if (i > -1) { // Zeilenumbruch vorhanden
-			int j = 0;
-			Dimension result = new Dimension(0, 0);
-			while (i > -1) {
-				Dimension lineDim = formulaLine(g, pos, code.substring(j, i), visible);
-				result.height += lineDim.height;
-				result.width = Math.max(lineDim.width, result.width);
-				pos.y += lineDim.height;
-				j = i + 3;
-				i = code.indexOf("\\n ", j);
-			}
-			Dimension lineDim = formulaLine(g, pos, code.substring(j), visible);
-			result.height += lineDim.height;
-			result.width = Math.max(lineDim.width, result.width);
-			return result;
-		} else
-			/* kein Zeilenumbruch vorhanden */return formulaLine(g, pos, code, visible);
-	}
-
-	public void draw(Graphics g, int x, int y) {
-		internDraw(g, new Point(x, y), true);
-	}
-
-	public void draw(Graphics g, Point pos) {
-		// Zeichnet die Formel/den Text mit der linken oberen Ecke an Pos
-		internDraw(g, pos, true);
-	}
-
-	/***************************** Zeichenoperationen *****************************/
-
-	public static void main(String[] args) {
-		Formula f = new Formula("Dies ist ein {fett \\it{krasser}} \\Alpha -Test! Mach \\underline{das} mal nach!");
-		System.out.println(f.getText());
 	}
 }

@@ -7,7 +7,9 @@ public class FormulaPanel extends JPanel{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private Formula formula=null;
+	public static void main(String[] args){
+  }
+  private Formula formula=null;
   public FormulaPanel(){
     super();
   }
@@ -15,8 +17,8 @@ public class FormulaPanel extends JPanel{
     super();
     setFormula(code);
   }
-  public void setFormula(String code){
-    formula=new Formula(code);
+  public String getFormula(){
+    return formula.toString();
   }
   public void paint(Graphics g){
     super.paint(g);
@@ -24,10 +26,8 @@ public class FormulaPanel extends JPanel{
       formula.draw(g,new Point(20,20));
     }
   }
-  public String getFormula(){
-    return formula.toString();
-  }
   
-  public static void main(String[] args){
+  public void setFormula(String code){
+    formula=new Formula(code);
   }
 }
