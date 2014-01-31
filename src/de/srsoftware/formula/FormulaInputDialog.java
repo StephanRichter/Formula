@@ -1,9 +1,10 @@
 package de.srsoftware.formula;
 
 import java.awt.Color;
-import java.awt.Container;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,10 +15,13 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 
+import de.srsoftware.tools.HorizontalPanel;
 import de.srsoftware.tools.SuggestField;
+import de.srsoftware.tools.VerticalPanel;
 import de.srsoftware.tools.translations.Translations;
 
 /**
@@ -66,35 +70,22 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		return fp.getResult();
 	}
 	// Anfang Variablen
-	private FormulaPanel formulaPanel = new FormulaPanel();
-	private SuggestField inputTextField = new SuggestField();
+	private FormulaPanel formulaPanel;
+	private SuggestField inputTextField;
 	private String formula = null;
 	private String oldFormula = null;
-	private JButton addSum = new JButton();
-	private JButton fractal = new JButton();
-	private JButton product = new JButton();
-	private JButton root = new JButton();
-	private JButton integral = new JButton();
-	private JButton cases = new JButton();
-	private JButton ceiling = new JButton();
-	private JButton floor = new JButton();
-	private JButton small = new JButton();
-	private JButton big = new JButton();
-	private JButton bold = new JButton();
-	private JButton italic = new JButton();
-	private JButton underlined = new JButton();
-	private JButton overlined = new JButton();
-	private JButton subscript = new JButton();
-	private JButton superscript = new JButton();
-	private JButton okButton = new JButton();
-	private JButton type = new JButton();
-	private JButton matrix = new JButton();
+	private JButton addSum,product,integral,matrix;
+	private JButton fraction,root,small,big;
+	private JButton cases,subscript,superscript;
+	private JButton ceiling,floor,type;
+	private JButton bold,italic,underlined,overlined;
+	private JButton okButton;
 
 	
 	// Ende Variablen
 
 
-	private JComboBox arrowMenu = new JComboBox();
+	private JComboBox arrowMenu;
 
 	private static int savedX = -1;
 
@@ -199,6 +190,8 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	private String getResult() {
 		return formula;
 	}
+	
+	
 
 	private void init(String title, String text, boolean modal) {
 		oldFormula = text;
@@ -207,203 +200,46 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 				dispose(false);
 			}
 		});
-		setSize(frameWidth, frameHeight);
 		if ((savedX < 0) && (savedY < 0)) {
 			Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
 			savedX = (d.width - getSize().width) / 2;
 			savedY = (d.height - getSize().height) / 2;
 		}
 		setLocation(savedX, savedY);
-		Container cp = getContentPane();
-		cp.setLayout(null);
-		// Anfang Komponenten
-
-		formulaPanel.setBounds(0, 32, frameWidth-10, frameHeight-170);
-		formulaPanel.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 15));
-		formulaPanel.setForeground(Color.black);
-		formulaPanel.setBackground(Color.white);
-		cp.add(formulaPanel);
-		inputTextField.setBounds(0, 0, 849, 27);
-		inputTextField.setEditable(true);
-		inputTextField.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 17));
-		inputTextField.setForeground(Color.black);
-		inputTextField.setBackground(Color.white);
-		inputTextField.setText((text == null) ? "" : text);
-		if (text != null) inputTextField.selectAll();
-		inputTextField.addKeyListener(this);
-		inputTextField.addActionListener(this);
-		cp.add(inputTextField);
-		addSum.setBounds(0, 264, 83, 25);
-		addSum.setText(_("sum"));
-		cp.add(addSum);
-		addSum.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				addSumActionPerformed(evt);
-			}
-		});
-
-		fractal.setBounds(88, 264, 100, 25);
-		fractal.setText(_("fraction"));
-		cp.add(fractal);
-		fractal.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				fractalActionPerformed(evt);
-			}
-		});
-
-		product.setBounds(0, 290, 83, 25);
-		product.setText(_("product"));
-		cp.add(product);
-		product.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				productActionPerformed(evt);
-			}
-		});
-
-		root.setBounds(88, 290, 100, 25);
-		root.setText(_("root"));
-		cp.add(root);
-		root.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				rootActionPerformed(evt);
-			}
-		});
 		
-		small.setBounds(88, 316, 100, 25);
-		small.setText(_("small"));
-		cp.add(small);
-		small.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				smallActionPerformed(evt);
-			}
-		});
+		Component panel;
+		add(panel=createPanel(text));
+		Dimension dim=panel.getPreferredSize();
+		setSize(dim.width,dim.height+20);
+
+		setResizable(false);
+	}
+
+	private Component createPanel(String text) {
+		VerticalPanel vp=new VerticalPanel();
+		vp.add(createInputTextField(text));
+		vp.add(formulaPanel=createFormulaPanel());
+		vp.add(createButtons());
+		vp.skalieren();
+		return vp;
+  }
+	private HorizontalPanel createButtons() {
+		HorizontalPanel buttonPanel=new HorizontalPanel();
 		
-		big.setBounds(88, 342, 100, 25);
-		big.setText(_("big"));
-		cp.add(big);
-		big.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				bigActionPerformed(evt);
-			}
-		});
+		buttonPanel.add(rowOne());
+		buttonPanel.add(rowTwo());
+		buttonPanel.add(rowThree());
+		buttonPanel.add(rowFour());
+    buttonPanel.add(rowFive());
+    buttonPanel.add(arrowBox());
+    buttonPanel.skalieren();
 
-		integral.setBounds(0, 316, 83, 25);
-		integral.setText(_("integral"));
-		cp.add(integral);
-		integral.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				integralActionPerformed(evt);
-			}
-		});
-
-		cases.setBounds(193, 264, 157, 25);
-		cases.setText(_("cases"));
-		cp.add(cases);
-		cases.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				casesActionPerformed(evt);
-			}
-		});
-
-		ceiling.setBounds(355, 264, 85, 25);
-		ceiling.setText(_("ceiling"));
-		cp.add(ceiling);
-		ceiling.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				ceilingActionPerformed(evt);
-			}
-		});
-
-		floor.setBounds(355, 290, 85, 25);
-		floor.setText(_("floor"));
-		cp.add(floor);
-		floor.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				floorActionPerformed(evt);
-			}
-		});
-		
-		bold.setBounds(455, 264, 125, 25);
-		bold.setText(_("bold"));
-		cp.add(bold);
-		bold.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				boldActionPerformed(evt);
-			}
-		});
-
-		italic.setBounds(455, 290, 125, 25);
-		italic.setText(_("italic"));
-		cp.add(italic);
-		italic.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				italicActionPerformed(evt);
-			}
-		});
-
-		underlined.setBounds(455, 316, 125, 25);
-		underlined.setText(_("underlined"));
-		cp.add(underlined);
-		underlined.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				underlinedActionPerformed(evt);
-			}
-		});
-
-		overlined.setBounds(455, 342, 125, 25);
-		overlined.setText(_("overlined"));
-		cp.add(overlined);
-		overlined.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				overlinedActionPerformed(evt);
-			}
-		});
-
-		subscript.setBounds(193, 316, 157, 25);
-		subscript.setText(_("subscript"));
-		cp.add(subscript);
-		subscript.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				subscriptActionPerformed(evt);
-			}
-		});
-
-		superscript.setBounds(193, 342, 157, 25);
-		superscript.setText(_("superscript"));
-		cp.add(superscript);
-		superscript.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				superscriptActionPerformed(evt);
-			}
-		});
-
-		type.setBounds(355, 342, 95, 25);
-		type.setText(_("typewriter"));
-		cp.add(type);
-		type.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				typeActionPerformed(evt);
-			}
-		});
-
-		matrix.setBounds(0, 342, 83, 25);
-		matrix.setText(_("matrix"));
-		cp.add(matrix);
-		matrix.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				matrixActionPerformed(evt);
-			}
-		});		
-		okButton.setBounds(707, 342, 83, 25);
-		okButton.setText(_("Ok"));
-		cp.add(okButton);
-		okButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				okButtonActionPerformed(evt);
-			}
-		});
-
-		arrowMenu.setBounds(590, 264, 200, 25);
+    return buttonPanel;
+  }
+	private JComponent arrowBox() {
+		VerticalPanel arrowBox = new VerticalPanel();
+		arrowMenu = new JComboBox();
+//		arrowMenu.setBounds(590, 264, 200, 25);
 		arrowMenu.addItem(_("Arrows"));
 		arrowMenu.addItem("\u2190 (<-)");
 		arrowMenu.addItem("\u21D0 (<=)");
@@ -421,12 +257,199 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 				if (s.contains("(")) insertText(s.substring(0,1));
 			}
 		});
-		cp.add(arrowMenu);
-		// Ende Komponenten
+		arrowBox.add(arrowMenu);
 
-		setResizable(false);
-	}
+		arrowBox.add(okButton=new JButton(_("Ok")));
+		okButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				okButtonActionPerformed(evt);
+			}
+		});
+		arrowBox.skalieren();
+		
+		Dimension dim=arrowBox.getPreferredSize();
+		dim.height=dim.height+50;
+		arrowBox.setPreferredSize(dim);
+		Point loc = okButton.getLocation();
+		okButton.setLocation(loc.x+100, loc.y+50);
+	  return arrowBox;
+  }
+	private VerticalPanel rowFive() {
+	  VerticalPanel five=new VerticalPanel();
+		
+	  five.add(bold=new JButton(_("bold")));
+		bold.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				boldActionPerformed(evt);
+			}
+		});
 
+		five.add(italic=new JButton(_("italic")));
+		italic.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				italicActionPerformed(evt);
+			}
+		});
+
+		five.add(underlined=new JButton(_("underlined")));
+		underlined.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				underlinedActionPerformed(evt);
+			}
+		});
+
+		five.add(overlined=new JButton(_("overlined")));
+		overlined.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				overlinedActionPerformed(evt);
+			}
+		});
+		five.skalieren();
+	  return five;
+  }
+	private VerticalPanel rowFour() {
+		VerticalPanel four=new VerticalPanel();
+		
+		four.add(ceiling=new JButton(_("ceiling")));
+		ceiling.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				ceilingActionPerformed(evt);
+			}
+		});
+
+		four.add(floor=new JButton(_("floor")));
+		floor.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				floorActionPerformed(evt);
+			}
+		});
+
+		four.add(type=new JButton(_("typewriter")));
+		type.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				typeActionPerformed(evt);
+			}
+		});
+		four.skalieren();
+	  return four;
+  }
+	private VerticalPanel rowThree() {
+		VerticalPanel three=new VerticalPanel();
+		
+		three.add(cases=new JButton(_("cases")));
+		cases.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				casesActionPerformed(evt);
+			}
+		});
+		
+		three.add(subscript=new JButton(_("subscript")));
+		subscript.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				subscriptActionPerformed(evt);
+			}
+		});
+
+		three.add(superscript=new JButton(_("superscript")));
+		superscript.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				superscriptActionPerformed(evt);
+			}
+		});
+		three.skalieren();
+	  return three;
+  }
+	private VerticalPanel rowTwo() {
+		VerticalPanel two=new VerticalPanel();
+		two.add(fraction=new JButton(_("fraction")));
+		fraction.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				fractalActionPerformed(evt);
+			}
+		});
+		
+		two.add(root=new JButton(_("root")));
+		root.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				rootActionPerformed(evt);
+			}
+		});
+		
+		two.add(small=new JButton(_("small")));
+		small.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				smallActionPerformed(evt);
+			}
+		});
+		
+		two.add(big=new JButton(_("big")));
+		big.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				bigActionPerformed(evt);
+			}
+		});
+		two.skalieren();
+	  return two;
+  }
+	private VerticalPanel rowOne() {
+		VerticalPanel one=new VerticalPanel();
+		one.add(addSum=new JButton(_("sum")));
+		addSum.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				addSumActionPerformed(evt);
+			}
+		});
+		
+		one.add(product=new JButton(_("product")));
+		product.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				productActionPerformed(evt);
+			}
+		});
+		
+		one.add(integral=new JButton(_("integral")));
+		integral.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				integralActionPerformed(evt);
+			}
+		});
+		
+		one.add(matrix=new JButton(_("matrix")));
+		matrix.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				matrixActionPerformed(evt);
+			}
+		});		
+
+		
+		one.skalieren();
+	  return one;
+  }
+	private SuggestField createInputTextField(String text) {
+		inputTextField=new SuggestField();
+		inputTextField.setPreferredSize(new Dimension(849, 27));
+		inputTextField.setSize(inputTextField.getPreferredSize());
+		inputTextField.setEditable(true);
+		inputTextField.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 17));
+		inputTextField.setForeground(Color.black);
+		inputTextField.setBackground(Color.white);
+		inputTextField.setText((text == null) ? "" : text);
+		if (text != null) inputTextField.selectAll();
+		inputTextField.addKeyListener(this);
+		inputTextField.addActionListener(this);
+		return inputTextField;
+  }
+	
+	private FormulaPanel createFormulaPanel() {
+		FormulaPanel formulaPanel=new FormulaPanel();
+		formulaPanel.setPreferredSize(new Dimension(frameWidth-10, frameHeight-170));
+		formulaPanel.setSize(formulaPanel.getPreferredSize());
+		formulaPanel.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 15));
+		formulaPanel.setForeground(Color.black);
+		formulaPanel.setBackground(Color.white);		
+	  return formulaPanel;
+  }
+	
 	private void insertText(String tx) {
 		String tmp = inputTextField.getText();
 		int pos = inputTextField.getCaretPosition();
