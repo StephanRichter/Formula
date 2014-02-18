@@ -480,7 +480,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	}
 
 	private void rootActionPerformed(ActionEvent evt) {
-		insertText(readInput(this, _("enter base (and exponent, if you want):"), "\\root{") + "}");
+		insertText(readInput(this, _("enter (degree,) radicand of the root expression:"), "\\root{") + "}");
 	}
 
 	private void setFormula(String code) {	
