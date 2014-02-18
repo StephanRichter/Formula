@@ -91,7 +91,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 
 	private static int savedY = -1;
 
-	private static final int frameWidth = 870;
+	private static final int frameWidth = 800;
 
 	private static final int frameHeight = 400;
 
@@ -230,7 +230,6 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		buttonPanel.add(rowTwo());
 		buttonPanel.add(rowThree());
 		buttonPanel.add(rowFour());
-    buttonPanel.add(rowFive());
     buttonPanel.add(arrowBox());
     buttonPanel.skalieren();
 
@@ -274,65 +273,48 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		okButton.setLocation(loc.x+100, loc.y+50);
 	  return arrowBox;
   }
-	private VerticalPanel rowFive() {
-	  VerticalPanel five=new VerticalPanel();
-		
-	  five.add(bold=new JButton(_("bold")));
-		bold.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				boldActionPerformed(evt);
-			}
-		});
 
-		five.add(italic=new JButton(_("italic")));
-		italic.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				italicActionPerformed(evt);
-			}
-		});
-
-		five.add(underlined=new JButton(_("underlined")));
-		underlined.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				underlinedActionPerformed(evt);
-			}
-		});
-
-		five.add(overlined=new JButton(_("overlined")));
-		overlined.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				overlinedActionPerformed(evt);
-			}
-		});
-		five.skalieren();
-	  return five;
-  }
 	private VerticalPanel rowFour() {
 		VerticalPanel four=new VerticalPanel();
 		
-		four.add(ceiling=new JButton(_("ceiling")));
-		ceiling.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				ceilingActionPerformed(evt);
-			}
-		});
-
-		four.add(floor=new JButton(_("floor")));
-		floor.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				floorActionPerformed(evt);
-			}
-		});
-
 		four.add(type=new JButton(_("typewriter")));
 		type.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				typeActionPerformed(evt);
 			}
 		});
+		
+		four.add(bold=new JButton(_("bold")));
+		bold.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				boldActionPerformed(evt);
+			}
+		});
+
+		four.add(italic=new JButton(_("italic")));
+		italic.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				italicActionPerformed(evt);
+			}
+		});
+
+		four.add(underlined=new JButton(_("underlined")));
+		underlined.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				underlinedActionPerformed(evt);
+			}
+		});
+
+		four.add(overlined=new JButton(_("overlined")));
+		overlined.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				overlinedActionPerformed(evt);
+			}
+		});
 		four.skalieren();
 	  return four;
   }
+	
 	private VerticalPanel rowThree() {
 		VerticalPanel three=new VerticalPanel();
 		
@@ -356,9 +338,24 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 				superscriptActionPerformed(evt);
 			}
 		});
+		
+		three.add(ceiling=new JButton(_("ceiling")));
+		ceiling.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				ceilingActionPerformed(evt);
+			}
+		});
+
+		three.add(floor=new JButton(_("floor")));
+		floor.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				floorActionPerformed(evt);
+			}
+		});
 		three.skalieren();
 	  return three;
   }
+	
 	private VerticalPanel rowTwo() {
 		VerticalPanel two=new VerticalPanel();
 		two.add(fraction=new JButton(_("fraction")));
@@ -422,12 +419,13 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		});		
 
 		
+		
 		one.skalieren();
 	  return one;
   }
 	private SuggestField createInputTextField(String text) {
 		inputTextField=new SuggestField();
-		inputTextField.setPreferredSize(new Dimension(849, 27));
+		inputTextField.setPreferredSize(new Dimension(frameWidth-10, 27));
 		inputTextField.setSize(inputTextField.getPreferredSize());
 		inputTextField.setEditable(true);
 		inputTextField.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 17));
