@@ -652,17 +652,21 @@ public class Formula { // ------------------
 			int positionOfBackslash = text.lastIndexOf('\\', positionOfOpeningBracket);
 			if (positionOfBackslash >= 0) {
 				String command=text.substring(positionOfBackslash+1,positionOfOpeningBracket);
-				if (command.equals("rgb")||command.equals("color")) positionOfOpeningBracket+=7;
+				if (command.equals("rgb")||command.equals("color")) positionOfOpeningBracket=Math.min(text.indexOf(",",positionOfOpeningBracket),text.indexOf(";",positionOfOpeningBracket));
 				if (command.equals("^")) {
 					text = text.substring(0, positionOfBackslash) + "^("+ text.substring(positionOfOpeningBracket + 1, positionOfClosingBracket) + ")" + text.substring(positionOfClosingBracket + 1);
         } else {
   				if (command.equals("_")) {
   					text = text.substring(0, positionOfBackslash) + "_"+ text.substring(positionOfOpeningBracket + 1, positionOfClosingBracket) + " " + text.substring(positionOfClosingBracket + 1);
           } else {
-        	text = text.substring(0, positionOfBackslash) + text.substring(positionOfOpeningBracket + 1, positionOfClosingBracket) + text.substring(positionOfClosingBracket + 1);
+          	try {
+          		text = text.substring(0, positionOfBackslash) + text.substring(positionOfOpeningBracket + 1, positionOfClosingBracket) + text.substring(positionOfClosingBracket + 1);
+          	} catch (IndexOutOfBoundsException iobe){
+          		System.err.println(text);
+          		throw iobe;
+          	}
           }
-        }
-				
+        }				
 				positionOfClosingBracket = text.indexOf('}');
 			} else
 				positionOfClosingBracket = text.indexOf('}', positionOfClosingBracket + 1);
