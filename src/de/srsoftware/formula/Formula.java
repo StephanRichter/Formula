@@ -604,7 +604,7 @@ public class Formula { // ------------------
 
 	private boolean boxDrawn = false;
 
-	private BufferedImage image;
+	private static BufferedImage image;
 	
 	private class FormulaFont{
 		Color col;
@@ -617,7 +617,7 @@ public class Formula { // ------------------
 		}
 		
 		public FormulaFont(){
-			this(Color.black,new Font("Helvetica",Font.PLAIN,12));
+			this(Color.black,new Font("Helvetica",Font.PLAIN,14));
 		}
 
 		public FormulaFont bold() {
@@ -703,10 +703,26 @@ public class Formula { // ------------------
 	}
 	
 	private static BufferedImage renderCommand(String command, StringBuffer code, FormulaFont font) {
-		System.out.println(command+"("+code+")");
 		if (command.equals("\\bold")) return render(code, font.bold());
 		if (command.equals("\\it")) return render(code, font.italic());
-    return render(code, font.bold());
+		if (command.equals("\\underline")) return underline(code,font);
+		if (command.equals("\\overline")) return overline(code,font);
+		System.out.println(command+"("+code+")");
+    return render(code, font);
+	}
+	private static BufferedImage overline(StringBuffer code, FormulaFont font) {
+		BufferedImage image=render(code,font);
+		Graphics2D g = (Graphics2D)image.getGraphics();
+		g.setColor(font.col);
+		g.drawLine(0, 0, image.getWidth(), 0);
+		return image;
+	}
+	private static BufferedImage underline(StringBuffer code, FormulaFont font) {
+		BufferedImage image=render(code,font);
+		Graphics2D g = (Graphics2D)image.getGraphics();
+		g.setColor(font.col);
+		g.drawLine(0, image.getHeight()-1, image.getWidth(), image.getHeight()-1);
+		return image;
 	}
 	private static StringBuffer findMatchingBracket(StringBuffer code) {
 		int count=1;
@@ -1916,9 +1932,9 @@ public class Formula { // ------------------
 	}
 		
 	private static BufferedImage renderText(String text, FormulaFont font){
-		if (text==null || text.length()==1) return null;
-		int width=1+font.stringWidth(text);
-		int height=1+font.getHeight();
+		if (text==null || text.isEmpty()) return null;
+		int width=font.stringWidth(text);
+		int height=font.getHeight();
 		BufferedImage result=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = result.createGraphics();
 		font.applyTo(g);
