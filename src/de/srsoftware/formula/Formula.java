@@ -600,9 +600,12 @@ public class Formula { // ------------------
 
 	private boolean boxDrawn = false;
 
+	private BufferedImage image;
+
 	/***************************** Konstruktor ************************************/
 	public Formula(String newCode) {
 		code = doReplacements(newCode);
+		image=textImage(newCode);
 		resetDimension();
 	}
 
@@ -1763,17 +1766,15 @@ public class Formula { // ------------------
 	private BufferedImage textImage(String text){
 		int width=metrics.stringWidth(text);
 		int height=metrics.getHeight();
-		System.out.println(width+" x "+height);
 		BufferedImage result=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = result.createGraphics();
 		g.setColor(Color.black);
 		g.setFont(defaultFont);
-		g.drawLine(0,0,width,height);
 		g.drawString(text, 0,height*3/4);
 		return result;
 	}
 	
 	public BufferedImage image(){
-		return textImage(code);
+		return image;
 	}
 }
