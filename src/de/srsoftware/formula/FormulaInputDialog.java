@@ -516,5 +516,13 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	protected void smallActionPerformed(ActionEvent evt) {
 		format("small");
 	}
-
+	public static void main(String[] args) {
+		JFrame app=new JFrame("Test");
+		app.setPreferredSize(new Dimension(800,600));
+		app.setSize(app.getPreferredSize());
+		app.pack();
+		app.setDefaultCloseOperation(EXIT_ON_CLOSE);
+		app.setVisible(true);		
+		FormulaInputDialog.readInput(app, "Input dialog for Test");
+	}
 }
