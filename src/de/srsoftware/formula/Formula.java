@@ -605,10 +605,36 @@ public class Formula { // ------------------
 	/***************************** Konstruktor ************************************/
 	public Formula(String newCode) {
 		code = doReplacements(newCode);
-		image=textImage(newCode);
+		image=createImage(newCode);
 		resetDimension();
 	}
-
+	
+	private boolean smallest(int a, int b,int c){
+		if (a==-1) a=Integer.MAX_VALUE;
+		if (b==-1) b=Integer.MAX_VALUE;
+		if (c==-1) c=Integer.MAX_VALUE;
+		return a<b && a<c;
+	}
+	
+	private BufferedImage createImage(String code) {
+		if (code.contains("\\")){
+			int pos = code.indexOf('\\');
+			int spacePos=code.indexOf(' ', pos);
+			int backslashPos=code.indexOf('\\',pos);
+			int bracePos=code.indexOf('{',pos);			
+			if (smallest(spacePos,backslashPos,bracePos)){ // macro delimited by space
+				System.err.println("Found a space-delimited macro. This should be replaced!");
+			}
+			if (smallest(backslashPos,bracePos,spacePos)){ // macro delimited by backslash
+				System.err.println("Found a backslash-delimited macro. This is not implemented, yet!");
+			}
+			if (smallest(bracePos,spacePos,backslashPos)){ // macro delimited by bracket
+				
+			}
+		}
+		return image=textImage(code);
+	}
+	
 	public void draw(Graphics g, int x, int y) {
 		internDraw(g, new Point(x, y), true);
 	}
@@ -1759,7 +1785,7 @@ public class Formula { // ------------------
 	private static FontMetrics getDefaultFontMetrics(){
 		JLabel dummy=new JLabel();
 		defaultFont=dummy.getFont();
-		defaultFont=defaultFont.deriveFont(20f);
+		//defaultFont=defaultFont.deriveFont(20f);
 		return dummy.getFontMetrics(defaultFont);
 	}
 	
