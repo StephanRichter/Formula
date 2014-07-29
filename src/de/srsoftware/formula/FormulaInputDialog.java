@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -18,6 +20,7 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 import de.srsoftware.tools.HorizontalPanel;
 import de.srsoftware.tools.SuggestField;
@@ -516,13 +519,19 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	protected void smallActionPerformed(ActionEvent evt) {
 		format("small");
 	}
+	
 	public static void main(String[] args) {
 		JFrame app=new JFrame("Test");
-		app.setPreferredSize(new Dimension(800,600));
-		app.setSize(app.getPreferredSize());
+		String code=FormulaInputDialog.readInput(app, "Input dialog for Test");
+		System.out.println(code);
+		System.err.println(code);
+		
+		JPanel panel=new FormulaPanel(code);		
+		panel.setPreferredSize(new Dimension(800,600));
+		panel.setSize(panel.getPreferredSize());		
+		app.add(panel);
 		app.pack();
 		app.setDefaultCloseOperation(EXIT_ON_CLOSE);
-		app.setVisible(true);		
-		FormulaInputDialog.readInput(app, "Input dialog for Test");
+		app.setVisible(true);	
 	}
 }

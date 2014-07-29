@@ -5,7 +5,11 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.image.BufferedImage;
+
+import javax.swing.JLabel;
 
 public class Formula { // ------------------
 	/***************************** Zeichenoperationen *****************************/
@@ -1575,12 +1579,12 @@ public class Formula { // ------------------
 			tx = delete(tx, breakIndex - 1);
 			breakIndex = tx.indexOf("##", breakIndex + 1);
 		}
-		if (breakIndex == -1) { // tx enth�lt keine einfachen Zeilenumbr�che
+		if (breakIndex == -1) { // tx enthält keine einfachen Zeilenumbrüche
 			if (visible) {
 				g.drawString(tx, x, y);
 			}
 			return new Dimension(fm.stringWidth(tx), fm.getHeight());
-		} else { // tx enth�lt einfache Zeilenumbr�che
+		} else { // tx enthält einfache Zeilenumbrüche
 			Dimension result = new Dimension(0, 0);
 			int j = 0;
 			while (breakIndex != -1) {
@@ -1744,5 +1748,32 @@ public class Formula { // ------------------
 		input=input.replace("\\zeta " ,"\u03b6");
 		input=input.replace("\\Zeta ", "\u0396");
 		return input;
+	}
+	
+	static Font defaultFont=null;
+	static FontMetrics metrics=getDefaultFontMetrics();
+	
+	private static FontMetrics getDefaultFontMetrics(){
+		JLabel dummy=new JLabel();
+		defaultFont=dummy.getFont();
+		defaultFont=defaultFont.deriveFont(20f);
+		return dummy.getFontMetrics(defaultFont);
+	}
+	
+	private BufferedImage textImage(String text){
+		int width=metrics.stringWidth(text);
+		int height=metrics.getHeight();
+		System.out.println(width+" x "+height);
+		BufferedImage result=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = result.createGraphics();
+		g.setColor(Color.black);
+		g.setFont(defaultFont);
+		g.drawLine(0,0,width,height);
+		g.drawString(text, 0,height*3/4);
+		return result;
+	}
+	
+	public BufferedImage image(){
+		return textImage(code);
 	}
 }

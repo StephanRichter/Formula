@@ -24,6 +24,7 @@ public class FormulaPanel extends JPanel{
     super.paint(g);
     if (formula!=null){
       formula.draw(g,new Point(20,20));
+      g.drawImage(formula.image(), 100, 100, null);
     }
   }
   
