@@ -1,5 +1,6 @@
 package de.srsoftware.formula;
 
+import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -15,7 +16,9 @@ public class Formula { // ------------------
 	/***************************** Zeichenoperationen *****************************/
 
 	public static void main(String[] args) {
-		Formula f = new Formula("Dies ist ein {fett \\it{krasser}} \\Alpha -Test! Mach \\underline{das} mal nach!");
+		String code="Dies ist ein {fett \\it{krasser}} \\Alpha -Test! Mach \\underline{das} mal nach!";
+		System.out.println(code);
+		Formula f = new Formula(code);
 		System.out.println(f.getText());
 	}
 	/***************************** Initialisierung ********************************/
@@ -601,11 +604,51 @@ public class Formula { // ------------------
 	private boolean boxDrawn = false;
 
 	private BufferedImage image;
+	
+	private class FormulaFont{
+		Color col;
+		Font font;
+		FontMetrics metrics;
+		public FormulaFont(Color c,Font f) {
+			col=c;
+			font=f;
+			metrics=new Canvas().getFontMetrics(font);
+		}
+		
+		public FormulaFont(){
+			this(Color.black,new Font("Helvetica",Font.PLAIN,12));
+		}
+
+		public FormulaFont bold() {
+			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle() | Font.BOLD, font.getSize()));
+		}
+
+		public FontMetrics metrics() {
+			return metrics;
+		}
+
+		public int stringWidth(String text) {
+			return metrics.stringWidth(text);
+		}
+
+		public int getHeight() {
+			return metrics.getHeight();
+		}
+
+		public void applyTo(Graphics2D g) {
+			g.setFont(font);
+			g.setColor(col);
+		}
+
+		public FormulaFont italic() {
+			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle() | Font.ITALIC, font.getSize()));
+		}		
+	}
 
 	/***************************** Konstruktor ************************************/
 	public Formula(String newCode) {
 		code = doReplacements(newCode);
-		image=createImage(newCode);
+		image=createImage(newCode,new FormulaFont());
 		resetDimension();
 	}
 	
@@ -616,9 +659,18 @@ public class Formula { // ------------------
 		return a<b && a<c;
 	}
 	
-	private BufferedImage createImage(String code) {
+	private class Part{
+		public BufferedImage renderedPart;
+		public String remainingCode;
+		public Part(BufferedImage img,String code) {
+			renderedPart=img;
+			remainingCode=code;
+		}
+	}
+	
+	private BufferedImage createImage(String code, FormulaFont font) {
 		if (code.contains("\\")){
-			int pos = code.indexOf('\\');
+			int pos = code.indexOf('\\')+1;
 			int spacePos=code.indexOf(' ', pos);
 			int backslashPos=code.indexOf('\\',pos);
 			int bracePos=code.indexOf('{',pos);			
@@ -629,12 +681,41 @@ public class Formula { // ------------------
 				System.err.println("Found a backslash-delimited macro. This is not implemented, yet!");
 			}
 			if (smallest(bracePos,spacePos,backslashPos)){ // macro delimited by bracket
-				
+				String pre=code.substring(0,pos-1);
+				String command=code.substring(pos,bracePos);
+				String render=code.substring(bracePos+1);
+				Part part=renderBracketExpression(command,render,font);
+				BufferedImage image1 = textImage(pre, font);
+				BufferedImage image2 = part.renderedPart;
+				BufferedImage image3 = createImage(part.remainingCode, font);
+				height=Math.max(image1.getHeight(), Math.max(image2.getHeight(), image3.getHeight()));
+				width=image1.getWidth()+image2.getWidth()+image3.getWidth();
+				BufferedImage image=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+				Graphics2D g = (Graphics2D)image.getGraphics();
+				g.drawImage(image1,0,(height-image1.getHeight())/2,null);
+				g.drawImage(image2, image1.getWidth(), (height-image2.getHeight())/2,null);
+				g.drawImage(image3, image1.getWidth()+image2.getWidth(), (height-image3.getHeight())/2,null);
+				return image;
 			}
-		}
-		return image=textImage(code);
+		} 
+		return image=textImage(code,font);
+		
 	}
 	
+	private Part renderBracketExpression(String command, String code, FormulaFont font) {
+		if (command.equals("bold")){
+			font=font.bold();
+		} else if (command.equals("it")){
+			font=font.italic();
+		} else {
+			System.err.println("unknown command '"+command+"' encountered.");
+		}
+		int pos=code.indexOf('}');
+		if (pos>=0){
+			return new Part(createImage(code.substring(0,pos), font),code.substring(pos+1));
+		}
+		return new Part(createImage(code,font),"");		
+	}
 	public void draw(Graphics g, int x, int y) {
 		internDraw(g, new Point(x, y), true);
 	}
@@ -1778,24 +1859,13 @@ public class Formula { // ------------------
 		input=input.replace("\\Zeta ", "\u0396");
 		return input;
 	}
-	
-	static Font defaultFont=null;
-	static FontMetrics metrics=getDefaultFontMetrics();
-	
-	private static FontMetrics getDefaultFontMetrics(){
-		JLabel dummy=new JLabel();
-		defaultFont=dummy.getFont();
-		//defaultFont=defaultFont.deriveFont(20f);
-		return dummy.getFontMetrics(defaultFont);
-	}
-	
-	private BufferedImage textImage(String text){
-		int width=metrics.stringWidth(text);
-		int height=metrics.getHeight();
+		
+	private BufferedImage textImage(String text, FormulaFont font){
+		int width=1+font.stringWidth(text);
+		int height=1+font.getHeight();
 		BufferedImage result=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = result.createGraphics();
-		g.setColor(Color.black);
-		g.setFont(defaultFont);
+		font.applyTo(g);
 		g.drawString(text, 0,height*3/4);
 		return result;
 	}
