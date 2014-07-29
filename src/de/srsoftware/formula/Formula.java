@@ -9,6 +9,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.util.Vector;
 
 import javax.swing.JLabel;
 
@@ -646,9 +647,10 @@ public class Formula { // ------------------
 	}
 
 	/***************************** Konstruktor ************************************/
-	public Formula(String newCode) {
-		code = doReplacements(newCode);
-		image=createImage(newCode,new FormulaFont());
+	public Formula(String code) {
+		code = doReplacements(code);
+		System.out.println();
+		image=render(new StringBuffer(code),new FormulaFont());
 		resetDimension();
 	}
 	
@@ -668,53 +670,106 @@ public class Formula { // ------------------
 		}
 	}
 	
-	private BufferedImage createImage(String code, FormulaFont font) {
-		if (code.contains("\\")){
-			int pos = code.indexOf('\\')+1;
-			int spacePos=code.indexOf(' ', pos);
-			int backslashPos=code.indexOf('\\',pos);
-			int bracePos=code.indexOf('{',pos);			
-			if (smallest(spacePos,backslashPos,bracePos)){ // macro delimited by space
-				System.err.println("Found a space-delimited macro. This should be replaced!");
+	private static BufferedImage render(StringBuffer code, FormulaFont font) {
+		Vector<BufferedImage> parts=new Vector<BufferedImage>();
+
+		StringBuffer chunk=new StringBuffer();
+		while (code.length()>0){
+			if (code.charAt(0)=='\\'){
+				parts.add(renderText(chunk.toString(), font));
+				parts.add(parseCommand(code,font));
+				chunk=new StringBuffer();
+			} else {
+				transferChar(code, chunk);
 			}
-			if (smallest(backslashPos,bracePos,spacePos)){ // macro delimited by backslash
-				System.err.println("Found a backslash-delimited macro. This is not implemented, yet!");
-			}
-			if (smallest(bracePos,spacePos,backslashPos)){ // macro delimited by bracket
-				String pre=code.substring(0,pos-1);
-				String command=code.substring(pos,bracePos);
-				String render=code.substring(bracePos+1);
-				Part part=renderBracketExpression(command,render,font);
-				BufferedImage image1 = textImage(pre, font);
-				BufferedImage image2 = part.renderedPart;
-				BufferedImage image3 = createImage(part.remainingCode, font);
-				height=Math.max(image1.getHeight(), Math.max(image2.getHeight(), image3.getHeight()));
-				width=image1.getWidth()+image2.getWidth()+image3.getWidth();
-				BufferedImage image=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-				Graphics2D g = (Graphics2D)image.getGraphics();
-				g.drawImage(image1,0,(height-image1.getHeight())/2,null);
-				g.drawImage(image2, image1.getWidth(), (height-image2.getHeight())/2,null);
-				g.drawImage(image3, image1.getWidth()+image2.getWidth(), (height-image3.getHeight())/2,null);
-				return image;
-			}
-		} 
-		return image=textImage(code,font);
-		
+		}
+		parts.add(renderText(chunk.toString(), font));
+		return compose(parts);
 	}
 	
-	private Part renderBracketExpression(String command, String code, FormulaFont font) {
-		if (command.equals("bold")){
-			font=font.bold();
-		} else if (command.equals("it")){
-			font=font.italic();
-		} else {
-			System.err.println("unknown command '"+command+"' encountered.");
+	
+	private static BufferedImage parseCommand(StringBuffer code, FormulaFont font) {
+		String command=readCommand(code);
+		if (code.length()==0){
+			return renderText(command, font);
 		}
-		int pos=code.indexOf('}');
-		if (pos>=0){
-			return new Part(createImage(code.substring(0,pos), font),code.substring(pos+1));
+		if (code.charAt(0)=='{'){
+			code.deleteCharAt(0);
+			StringBuffer chunk=findMatchingBracket(code);
+			return renderCommand(command,chunk,font);
 		}
-		return new Part(createImage(code,font),"");		
+		System.out.println(command);
+		return renderText(code.toString(), font);
+	}
+	
+	private static BufferedImage renderCommand(String command, StringBuffer code, FormulaFont font) {
+		System.out.println(command+"("+code+")");
+		if (command.equals("\\bold")) return render(code, font.bold());
+		if (command.equals("\\it")) return render(code, font.italic());
+    return render(code, font.bold());
+	}
+	private static StringBuffer findMatchingBracket(StringBuffer code) {
+		int count=1;
+		StringBuffer chunk=new StringBuffer();
+		while (code.length()>0){
+			if (code.charAt(0)=='{'){
+				count++;
+			}
+			if (code.charAt(0)=='}'){
+				count--;
+			}
+			if (count==0){
+				code.deleteCharAt(0);
+				break;
+			}
+			transferChar(code, chunk);
+		}
+		return chunk;
+	}
+	
+	private static String readCommand(StringBuffer code) {
+		StringBuffer command=new StringBuffer();
+		transferChar(code, command);
+		while (code.length()>0){		
+			if (code.charAt(0)=='{'){
+				break;
+			}
+			if (code.charAt(0)==' '){
+				System.err.println("found space delimited command '"+command+"'!");
+				break;
+			}
+			transferChar(code, command);			
+		}
+		return command.toString();
+	}
+	private static void transferChar(StringBuffer origin, StringBuffer destination) {
+		destination.append(origin.charAt(0));
+		origin.deleteCharAt(0);
+	}
+	
+	private static BufferedImage compose(Vector<BufferedImage> parts) {
+		int height=0;
+		int width=0;
+		for (BufferedImage image:parts){
+			if (image!=null){
+				height=Math.max(height, image.getHeight());
+				width+=image.getWidth();
+			}
+		}
+		if (height==0 || width==0){
+			return null;
+		}
+		BufferedImage result=new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g=(Graphics2D) result.createGraphics();
+		int x=0;
+		for (BufferedImage image:parts){
+			if (image!=null){
+				g.drawImage(image, x, (height-image.getHeight())/2, null);
+				x+=image.getWidth();
+				image=null;
+			}
+		}
+		return result;		
 	}
 	public void draw(Graphics g, int x, int y) {
 		internDraw(g, new Point(x, y), true);
@@ -1860,7 +1915,8 @@ public class Formula { // ------------------
 		return input;
 	}
 		
-	private BufferedImage textImage(String text, FormulaFont font){
+	private static BufferedImage renderText(String text, FormulaFont font){
+		if (text==null || text.length()==1) return null;
 		int width=1+font.stringWidth(text);
 		int height=1+font.getHeight();
 		BufferedImage result=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
