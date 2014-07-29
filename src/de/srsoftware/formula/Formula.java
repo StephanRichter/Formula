@@ -617,15 +617,11 @@ public class Formula { // ------------------
 		}
 		
 		public FormulaFont(){
-			this(Color.black,new Font("Helvetica",Font.PLAIN,14));
+			this(Color.black,new Font("SansSerif",Font.PLAIN,14));
 		}
 
 		public FormulaFont bold() {
 			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle() | Font.BOLD, font.getSize()));
-		}
-
-		public FontMetrics metrics() {
-			return metrics;
 		}
 
 		public int stringWidth(String text) {
@@ -643,6 +639,10 @@ public class Formula { // ------------------
 
 		public FormulaFont italic() {
 			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle() | Font.ITALIC, font.getSize()));
+		}
+
+		public FormulaFont monospaced() {
+			return new FormulaFont(col, new Font("Monospaced", font.getStyle(), font.getSize()));
 		}		
 	}
 
@@ -672,19 +672,55 @@ public class Formula { // ------------------
 	
 	private static BufferedImage render(StringBuffer code, FormulaFont font) {
 		Vector<BufferedImage> parts=new Vector<BufferedImage>();
-
 		StringBuffer chunk=new StringBuffer();
 		while (code.length()>0){
-			if (code.charAt(0)=='\\'){
+			parts.add(renderLine(code, font));			
+		}
+		return composeColumn(parts);
+	}
+	
+	private static BufferedImage composeColumn(Vector<BufferedImage> parts) {
+		int height=0;
+		int width=0;
+		for (BufferedImage image:parts){
+			if (image!=null){
+				width=Math.max(width, image.getWidth());
+				height+=image.getHeight();
+			}
+		}
+		if (height==0 || width==0){
+			return null;
+		}
+		BufferedImage result=new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g=(Graphics2D) result.createGraphics();
+		int y=0;
+		for (BufferedImage image:parts){
+			if (image!=null){
+				g.drawImage(image, 0, y, null);
+				y+=image.getHeight();
+				image=null;
+			}
+		}
+		return result;		
+	}
+	private static BufferedImage renderLine(StringBuffer code, FormulaFont font) {
+		Vector<BufferedImage> parts=new Vector<BufferedImage>();
+		StringBuffer chunk=new StringBuffer();
+		while (code.length()>0){
+			if (code.charAt(0)=='\\'){				
 				parts.add(renderText(chunk.toString(), font));
+				if (code.length()>2 && code.charAt(1)=='n' && code.charAt(2)==' '){ // \n command found
+					code.delete(0, 3);
+					return composeLine(parts);
+				}
 				parts.add(parseCommand(code,font));
-				chunk=new StringBuffer();
+				chunk=new StringBuffer();				
 			} else {
 				transferChar(code, chunk);
 			}
 		}
 		parts.add(renderText(chunk.toString(), font));
-		return compose(parts);
+		return composeLine(parts);
 	}
 	
 	
@@ -702,12 +738,50 @@ public class Formula { // ------------------
 		return renderText(code.toString(), font);
 	}
 	
-	private static BufferedImage renderCommand(String command, StringBuffer code, FormulaFont font) {
-		if (command.equals("\\bold")) return render(code, font.bold());
-		if (command.equals("\\it")) return render(code, font.italic());
-		if (command.equals("\\underline")) return underline(code,font);
-		if (command.equals("\\overline")) return overline(code,font);
-		System.out.println(command+"("+code+")");
+	private static BufferedImage renderCommand(String cmd, StringBuffer code, FormulaFont font) {
+		cmd=cmd.substring(1);
+		//if (cmd.equals("^")) return drawHigher(g, new Point(x, y), param, visible);
+		//if (cmd.equals("_")) return drawLower(g, new Point(x, y), param, visible);
+		//if (cmd.equals("~")) return drawWithTilde(g, new Point(x, y), param, visible);
+		//if (cmd.equals("arrow")) return drawUnderArrow(g, new Point(x, y), param, visible);
+		//if (cmd.equals("big")) return drawBigger(g, new Point(x, y + 1), param, visible);
+		//if (cmd.equals("block")) return drawBlock(g, new Point(x, y), param, visible);
+		if ((cmd.equals("bold")) || (cmd.equals("bf"))) return render(code, font.bold());
+		//if (cmd.equals("cases")) return drawCases(g, new Point(x, y), param, visible);
+//		if (cmd.equals("cap")) return drawIntervallSign(g, new Point(x, y), param, "\u22C2", visible);
+//		if (cmd.equals("Cap")) return drawIntervallSign(g, new Point(x, y), param, "\u22C0", visible);
+//		if (cmd.equals("ceil")) return drawCeil(g, new Point(x, y), param, visible);
+//		if (cmd.equals("color")) return drawColored(g, new Point(x, y), param, visible);
+//		if (cmd.equals("cup")) return drawIntervallSign(g, new Point(x, y), param, "\u22C3", visible);
+//		if (cmd.equals("cup+")) return drawIntervallSign(g, new Point(x, y), param, "\u228e", visible);
+//		if (cmd.equals("Cup")) return drawIntervallSign(g, new Point(x, y), param, "\u22c1", visible);
+//		if (cmd.equals("det")) return drawDeterminant(g, new Point(x, y), param, visible);
+//		if (cmd.equals("dot")) return drawWithDot(g, new Point(x, y), param, visible);
+//		if (cmd.equals("exists")) return drawIntervallSign(g, new Point(x, y), param, "\u2203", visible);
+//		if (cmd.equals("floor")) return drawFloor(g, new Point(x, y), param, visible);
+//		if (cmd.equals("forall")) return drawIntervallSign(g, new Point(x, y), param, "\u2200", visible);
+//		if (cmd.equals("frac")) return drawFrac(g, new Point(x, y), param, visible);
+//		if (cmd.equals("hat")) return drawWithHat(g, new Point(x, y), param, visible);
+//		if (cmd.equals("index")) return drawSmaller(g, new Point(x, y + 1), "\\block{"+param+"}", visible);
+//		if (cmd.equals("integr")) return drawIntervallSign(g, new Point(x, y), param, "\u222B", visible);
+//		if (cmd.equals("interv")) return drawIntervall(g, new Point(x, y), param, visible);
+		if ((cmd.equals("it")) || (cmd.equals("italic"))) return render(code, font.italic());
+//		if (cmd.equals("lim")) return drawBlock(g, new Point(x, y), ";lim;\\^{" + param + "}", visible);
+//		if (cmd.equals("matrix")) return drawMatrix(g, new Point(x, y), param, visible);
+		if (cmd.equals("overline")) return overline(code,font);
+//		if (cmd.equals("prod")) return drawIntervallSign(g, new Point(x, y), param, "\u220F", visible);
+//		if (cmd.equals("rblock")) return drawRBlock(g, new Point(x, y), param, visible);
+//		if (cmd.equals("rgb")) return drawRGBColored(g, new Point(x, y), param, visible);
+//		if (cmd.equals("root")) return drawRoot(g, new Point(x, y), param, visible);
+//		if (cmd.equals("set")) return drawSet(g, new Point(x, y), param, visible);
+//		if (cmd.equals("small")) return drawSmaller(g, new Point(x, y + 1), param, visible);
+//		if (cmd.equals("strike")) return drawStriked(g, new Point(x, y), param, visible);
+//		if (cmd.equals("sum")) return drawIntervallSign(g, new Point(x, y), param, "\u2211", visible);
+//		if (cmd.equals("tilde")) return drawWithTilde(g, new Point(x, y), param, visible);
+		if (cmd.equals("type")) return render(code,font.monospaced());
+		if (cmd.equals("underline")) return underline(code,font);
+//		if (cmd.equals("vector")) return drawVector(g, new Point(x, y), param, visible);
+		System.out.println(cmd+"("+code+")");
     return render(code, font);
 	}
 	private static BufferedImage overline(StringBuffer code, FormulaFont font) {
@@ -763,7 +837,7 @@ public class Formula { // ------------------
 		origin.deleteCharAt(0);
 	}
 	
-	private static BufferedImage compose(Vector<BufferedImage> parts) {
+	private static BufferedImage composeLine(Vector<BufferedImage> parts) {
 		int height=0;
 		int width=0;
 		for (BufferedImage image:parts){
