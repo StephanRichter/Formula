@@ -774,7 +774,7 @@ public class Formula { // ------------------
 		if (cmd.equals("prod")) return renderIntervall(code, "\u220F", font);
 //		if (cmd.equals("rblock")) return drawRBlock(g, new Point(x, y), param, visible);
 //		if (cmd.equals("rgb")) return drawRGBColored(g, new Point(x, y), param, visible);
-//		if (cmd.equals("root")) return drawRoot(g, new Point(x, y), param, visible);
+		if (cmd.equals("root")) return renderRoot(code,font);
 //		if (cmd.equals("set")) return drawSet(g, new Point(x, y), param, visible);
 		if (cmd.equals("small")) return render(code,font.smaller());
 		if (cmd.equals("strike")) return drawStriked(code,font);
@@ -787,6 +787,38 @@ public class Formula { // ------------------
     return render(code, font);
 	}
 
+	private static BufferedImage renderRoot(StringBuffer parameters, FormulaFont font) {
+		Vector<String> para=readParameters(parameters.toString());
+		if (para.size()>1){
+			BufferedImage exp = render(para.get(0),font.smaller());
+			BufferedImage rad = render(para.get(1),font);
+			
+			int h=Math.max(rad.getHeight(),rad.getHeight()/2+exp.getHeight());
+			BufferedImage result = new BufferedImage(rad.getWidth()+font.getHeight()/2+exp.getWidth(), h, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g=(Graphics2D)result.getGraphics();
+			g.drawImage(exp, 0, h-exp.getHeight()-rad.getHeight()/2, null);
+			g.drawImage(rad, exp.getWidth()+font.getHeight()/2, h-rad.getHeight(), null);
+			font.applyTo(g);
+			g.drawLine(0, h-rad.getHeight()/2, exp.getWidth(), h-rad.getHeight()/2);
+			g.drawLine(exp.getWidth(), h-rad.getHeight()/2, exp.getWidth()+font.getHeight()/4,h);
+			g.drawLine(exp.getWidth()+font.getHeight()/4,h,exp.getWidth()+font.getHeight()/2,h-rad.getHeight());
+			g.drawLine(exp.getWidth()+font.getHeight()/2,h-rad.getHeight(),exp.getWidth()+font.getHeight()/2+rad.getWidth(),h-rad.getHeight());
+			g.drawLine(exp.getWidth()+font.getHeight()/2+rad.getWidth(),h-rad.getHeight(),exp.getWidth()+font.getHeight()/2+rad.getWidth(),h-rad.getHeight()+font.getHeight()/4);
+			return result;
+		}
+		BufferedImage rad = render(para.get(0),font);
+		if (rad==null) return null;
+		int h=rad.getHeight();
+		BufferedImage result = new BufferedImage(rad.getWidth()+font.getHeight()/2+1, h, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g=(Graphics2D)result.getGraphics();
+		g.drawImage(rad, font.getHeight()/2, h-rad.getHeight(), null);
+		font.applyTo(g);
+		g.drawLine(0, h/2, font.getHeight()/4,h);
+		g.drawLine(font.getHeight()/4,h,font.getHeight()/2,0);
+		g.drawLine(font.getHeight()/2,0,font.getHeight()/2+rad.getWidth(),0);
+		g.drawLine(font.getHeight()/2+rad.getWidth(),0,font.getHeight()/2+rad.getWidth(),font.getHeight()/4);
+		return result;
+	}
 	private static BufferedImage renderFloor(StringBuffer code, FormulaFont font) {
 		BufferedImage image=render(code, font);
 		if (image==null) return null;
