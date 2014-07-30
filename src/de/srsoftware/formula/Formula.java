@@ -647,6 +647,10 @@ public class Formula { // ------------------
 
 		public FormulaFont smaller() {
 			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle(), font.getSize()*3/4));
+		}
+
+		public FormulaFont bigger() {
+			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle(), font.getSize()*4/3));
 		}		
 	}
 
@@ -748,8 +752,8 @@ public class Formula { // ------------------
 		if (cmd.equals("_")) return renderSubscript(code,font);
 		if (cmd.equals("~")) return renderTilde(code,font);
 		if (cmd.equals("arrow")) return renderwithArrow(code,font);
-		//if (cmd.equals("big")) return drawBigger(g, new Point(x, y + 1), param, visible);
-		//if (cmd.equals("block")) return drawBlock(g, new Point(x, y), param, visible);
+		if (cmd.equals("big")) return render(code,font.bigger());
+		if (cmd.equals("block")) return renderBlock(code,font);
 		if ((cmd.equals("bold")) || (cmd.equals("bf"))) return render(code, font.bold());
 		//if (cmd.equals("cases")) return drawCases(g, new Point(x, y), param, visible);
 //		if (cmd.equals("cap")) return drawIntervallSign(g, new Point(x, y), param, "\u22C2", visible);
@@ -787,6 +791,17 @@ public class Formula { // ------------------
 //		if (cmd.equals("vector")) return drawVector(g, new Point(x, y), param, visible);
 		System.out.println(cmd+"("+code+")");
     return render(code, font);
+	}
+	private static BufferedImage renderBlock(StringBuffer code, FormulaFont font) {
+		String s=code.toString();
+		if (s.contains("\\n ")){
+			// do nothing
+		} else if (s.contains(";")){
+			s=s.replace(";", "\\n ");
+		} else {
+			s=s.replace(",", "\\n ");
+		}
+		return render(new StringBuffer(s),font);
 	}
 	private static BufferedImage renderwithArrow(StringBuffer code, FormulaFont font) {
 		BufferedImage image=render(code,font);
