@@ -1,10 +1,7 @@
 package de.srsoftware.formula;
 
-import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
@@ -12,9 +9,7 @@ import java.util.Vector;
 
 public class Formula { // ------------------
 	
-	private final static int CENTER=1;
-	private final static int LEFT=0;
-	private final static int RIGHT=2;
+
 	
 	private String code;
 	private BufferedImage image;
@@ -621,74 +616,7 @@ public class Formula { // ------------------
   /**************** end of HTML export methods *******************/
 	
 	
-	/**
-	 * @author srichter
-	 * This class is used to set font settings during rendering
-	 */
-	private class FormulaFont{
-		Color col;
-		Font font;
-		FontMetrics metrics;
-		int align;
-		public FormulaFont(Color c,Font f,int align) {
-			this.align=align;
-			col=c;
-			font=f;
-			metrics=new Canvas().getFontMetrics(font);
-		}
-		
-		public FormulaFont(int fontSize){
-			this(Color.black,new Font("SansSerif",Font.PLAIN,fontSize),LEFT);
-		}
 
-		public FormulaFont bold() {
-			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle() | Font.BOLD, font.getSize()),align);
-		}
-
-		public int stringWidth(String text) {
-			return metrics.stringWidth(text);
-		}
-
-		public int getHeight() {
-			return metrics.getHeight();
-		}
-
-		public FormulaFont italic() {
-			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle() | Font.ITALIC, font.getSize()),align);
-		}
-
-		public FormulaFont monospaced() {
-			return new FormulaFont(col, new Font("Monospaced", font.getStyle(), font.getSize()),align);
-		}
-
-		public FormulaFont smaller() {
-			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle(), font.getSize()*3/4),align);
-		}
-
-		public FormulaFont bigger() {
-			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle(), font.getSize()*4/3),align);
-		}
-
-		public FormulaFont color(Color color) {
-			return new FormulaFont(color, new Font(font.getFontName(), font.getStyle(), font.getSize()),align);
-		}
-		public FormulaFont rightAligned() {
-	    return new FormulaFont(col, font,RIGHT);
-    }
-
-		public FormulaFont leftAligned() {
-			return new FormulaFont(col, font,LEFT);
-    }		
-
-		public FormulaFont centered() {
-			return new FormulaFont(col, font,CENTER);
-    }		
-		
-		public void applyTo(Graphics2D g) {
-			g.setFont(font);
-			g.setColor(col);
-		}
-	}
 
 	/***************************** Konstruktor ************************************/
 	public Formula(String code) {
@@ -784,9 +712,9 @@ public class Formula { // ------------------
 		for (BufferedImage image:parts){
 			if (image!=null){
 				switch (alignment){
-				case CENTER:
+				case FormulaFont.CENTER:
 					g.drawImage(image, (width-image.getWidth())/2, y, null); break;
-				case RIGHT:
+				case FormulaFont.RIGHT:
 					g.drawImage(image, width-image.getWidth(), y, null); break;
 				default:
 					g.drawImage(image, 0, y, null); break;
@@ -1126,7 +1054,7 @@ public class Formula { // ------------------
 		if (para.size()>0){
 			parts.add(render(para.get(0),font.smaller()));
 		}
-		return composeColumn(parts,CENTER);
+		return composeColumn(parts,FormulaFont.CENTER);
 	}
 	private static Vector<String> readParameters(String parameters) {		
 		if (parameters.contains(";")){			
