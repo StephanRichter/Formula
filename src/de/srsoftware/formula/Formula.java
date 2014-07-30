@@ -12,6 +12,8 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.Vector;
 
+import javax.swing.text.StyleContext.SmallAttributeSet;
+
 public class Formula { // ------------------
 	
 	private final static int CENTER=1;
@@ -766,7 +768,7 @@ public class Formula { // ------------------
 //		if (cmd.equals("hat")) return drawWithHat(g, new Point(x, y), param, visible);
 //		if (cmd.equals("index")) return drawSmaller(g, new Point(x, y + 1), "\\block{"+param+"}", visible);
 		if (cmd.equals("integr")) return renderIntervall(code, "\u222B", font);
-//		if (cmd.equals("interv")) return drawIntervall(g, new Point(x, y), param, visible);
+		if (cmd.equals("interv")) return renderIntervall(code,font);
 		if ((cmd.equals("it")) || (cmd.equals("italic"))) return render(code, font.italic());
 		if (cmd.equals("lim")) return renderBlock(" \\n lim\\n \\^{" + code + "}", font);
 		if (cmd.equals("matrix")) return renderMatrix(code,font);
@@ -787,6 +789,39 @@ public class Formula { // ------------------
     return render(code, font);
 	}
 
+	private static BufferedImage renderIntervall(StringBuffer parameters, FormulaFont font) {
+		Vector<String> para=readParameters(parameters.toString());
+		FormulaFont smallFont = font.smaller();
+		if (para.size()>1){
+			BufferedImage lo = render(para.get(0),smallFont);
+			BufferedImage hi = render(para.get(1),smallFont);
+			int h=font.getHeight()+lo.getHeight()+hi.getHeight();
+			int w=Math.max(lo.getWidth(), hi.getWidth());
+			BufferedImage result = new BufferedImage(2+w, h, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g=(Graphics2D) result.getGraphics();
+			g.drawImage(hi, 2, 0, null);
+			g.drawImage(lo, 2, h-lo.getHeight(), null);
+			font.applyTo(g);
+			g.drawLine(0, smallFont.getHeight()/3, 0, h-smallFont.getHeight()/2);
+			return result;
+		}
+		if (para.size()>0){
+			BufferedImage boundary = render(para.firstElement(),smallFont);
+			if (boundary==null) return null;
+			int h=font.getHeight()+boundary.getHeight();
+			BufferedImage result = new BufferedImage(2+boundary.getWidth(), h, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g=(Graphics2D) result.getGraphics();
+			g.drawImage(boundary, 2, h-boundary.getHeight(), null);
+			font.applyTo(g);
+			g.drawLine(0, 0, 0, h);
+			return result;
+		}
+		BufferedImage result = new BufferedImage(2, font.getHeight()+smallFont.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g=(Graphics2D) result.getGraphics();
+		font.applyTo(g);
+		g.drawLine(0, 0, 0, result.getHeight());
+		return result;
+	}
 	private static BufferedImage renderRoot(StringBuffer parameters, FormulaFont font) {
 		Vector<String> para=readParameters(parameters.toString());
 		if (para.size()>1){
