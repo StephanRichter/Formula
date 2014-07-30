@@ -744,8 +744,8 @@ public class Formula { // ------------------
 	
 	private static BufferedImage renderCommand(String cmd, StringBuffer code, FormulaFont font) {
 		cmd=cmd.substring(1);
-		if (cmd.equals("^")) return renderRaised(code,font);
-		//if (cmd.equals("_")) return drawLower(g, new Point(x, y), param, visible);
+		if (cmd.equals("^")) return renderSuperscript(code,font);
+		if (cmd.equals("_")) return renderSubscript(code,font);
 		//if (cmd.equals("~")) return drawWithTilde(g, new Point(x, y), param, visible);
 		//if (cmd.equals("arrow")) return drawUnderArrow(g, new Point(x, y), param, visible);
 		//if (cmd.equals("big")) return drawBigger(g, new Point(x, y + 1), param, visible);
@@ -788,7 +788,16 @@ public class Formula { // ------------------
 		System.out.println(cmd+"("+code+")");
     return render(code, font);
 	}
-	private static BufferedImage renderRaised(StringBuffer code, FormulaFont font) {
+	private static BufferedImage renderSubscript(StringBuffer code, FormulaFont font) {
+		FormulaFont small = font.smaller();
+		BufferedImage image=render(code,small);
+		BufferedImage result=new BufferedImage(image.getWidth(), image.getHeight()+font.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g=(Graphics2D) result.getGraphics();
+		g.drawImage(image, 0, image.getHeight(), null);
+		return result;
+	}
+	
+	private static BufferedImage renderSuperscript(StringBuffer code, FormulaFont font) {
 		FormulaFont small = font.smaller();
 		BufferedImage image=render(code,small);
 		BufferedImage result=new BufferedImage(image.getWidth(), image.getHeight()+font.getHeight(), BufferedImage.TYPE_INT_ARGB);
