@@ -745,7 +745,7 @@ public class Formula { // ------------------
 		if (cmd.equals("^")) return renderSuperscript(code,font);
 		if (cmd.equals("_")) return renderSubscript(code,font);
 		if (cmd.equals("~")) return renderTilde(code,font);
-		if (cmd.equals("arrow")) return renderwithArrow(code,font);
+		if (cmd.equals("arrow")) return renderVector(code,font);
 		if (cmd.equals("big")) return render(code,font.bigger());
 		if (cmd.equals("block")) return renderBlock(code,font);
 		if ((cmd.equals("bold")) || (cmd.equals("bf"))) return render(code, font.bold());
@@ -768,7 +768,7 @@ public class Formula { // ------------------
 		if (cmd.equals("integr")) return renderIntervall(code, "\u222B", font);
 //		if (cmd.equals("interv")) return drawIntervall(g, new Point(x, y), param, visible);
 		if ((cmd.equals("it")) || (cmd.equals("italic"))) return render(code, font.italic());
-//		if (cmd.equals("lim")) return drawBlock(g, new Point(x, y), ";lim;\\^{" + param + "}", visible);
+		if (cmd.equals("lim")) return renderBlock(" \\n lim\\n \\^{" + code + "}", font);
 		if (cmd.equals("matrix")) return renderMatrix(code,font);
 		if (cmd.equals("overline")) return overline(code,font);
 		if (cmd.equals("prod")) return renderIntervall(code, "\u220F", font);
@@ -777,15 +777,16 @@ public class Formula { // ------------------
 //		if (cmd.equals("root")) return drawRoot(g, new Point(x, y), param, visible);
 //		if (cmd.equals("set")) return drawSet(g, new Point(x, y), param, visible);
 		if (cmd.equals("small")) return render(code,font.smaller());
-//		if (cmd.equals("strike")) return drawStriked(g, new Point(x, y), param, visible);
+		if (cmd.equals("strike")) return drawStriked(code,font);
 		if (cmd.equals("sum")) return renderIntervall(code, "\u2211", font);
 		if (cmd.equals("tilde")) return renderTilde(code,font);
 		if (cmd.equals("type")) return render(code,font.monospaced());
 		if (cmd.equals("underline")) return underline(code,font);
-//		if (cmd.equals("vector")) return drawVector(g, new Point(x, y), param, visible);
+		if (cmd.equals("vector")) return renderVector(code,font);
 		System.out.println(cmd+"("+code+")");
     return render(code, font);
 	}
+
 	private static BufferedImage renderMatrix(StringBuffer code, FormulaFont font) {
 		BufferedImage image=renderBlock(code, font);
 		if (image==null) return null;
@@ -861,18 +862,21 @@ public class Formula { // ------------------
 		g.drawLine(5, h - 5, 10, h); // \
 		return result;
 	}
+	
 	private static BufferedImage renderBlock(StringBuffer code, FormulaFont font) {
-		String s=code.toString();
-		if (s.contains("\\n ")){
+		return renderBlock(code.toString(), font);
+	}	
+	private static BufferedImage renderBlock(String code, FormulaFont font) {
+		if (code.contains("\\n ")){
 			// do nothing
-		} else if (s.contains(";")){
-			s=s.replace(";", "\\n ");
+		} else if (code.contains(";")){
+			code=code.replace(";", "\\n ");
 		} else {
-			s=s.replace(",", "\\n ");
+			code=code.replace(",", "\\n ");
 		}
-		return render(new StringBuffer(s),font);
+		return render(new StringBuffer(code),font);
 	}
-	private static BufferedImage renderwithArrow(StringBuffer code, FormulaFont font) {
+	private static BufferedImage renderVector(StringBuffer code, FormulaFont font) {
 		BufferedImage image=render(code,font);
 		if (image==null) return null;
 		int d=font.getHeight()/4;
@@ -907,10 +911,18 @@ public class Formula { // ------------------
 	private static BufferedImage renderSuperscript(StringBuffer code, FormulaFont font) {
 		FormulaFont small = font.smaller();
 		BufferedImage image=render(code,small);
-		BufferedImage result=new BufferedImage(image.getWidth(), image.getHeight()+font.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		if (image==null) return null;
+		BufferedImage result=new BufferedImage(image.getWidth(), image.getHeight()+font.getHeight(), BufferedImage.TYPE_INT_ARGB);		
 		Graphics2D g=(Graphics2D) result.getGraphics();
 		g.drawImage(image, 0, 0, null);
 		return result;
+	}
+	private static BufferedImage drawStriked(StringBuffer code, FormulaFont font) {
+		BufferedImage image=render(code,font);
+		Graphics2D g = (Graphics2D)image.getGraphics();
+		g.setColor(font.col);
+		g.drawLine(0, image.getHeight()/2, image.getWidth(), image.getHeight()/2);
+		return image;
 	}
 	private static BufferedImage overline(StringBuffer code, FormulaFont font) {
 		BufferedImage image=render(code,font);
