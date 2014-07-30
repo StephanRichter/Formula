@@ -692,8 +692,8 @@ public class Formula { // ------------------
 
 	/***************************** Konstruktor ************************************/
 	public Formula(String code) {
-		code = doReplacements(code);
-		image=render(new StringBuffer(code),new FormulaFont());
+		this.code = doReplacements(code);
+		image=render(new StringBuffer(this.code),new FormulaFont());
 	}
 	/***************************** Rendering ************************************/
 
