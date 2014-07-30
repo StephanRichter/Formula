@@ -86,7 +86,6 @@ public class FormulaFont{
 	
 	public FormulaFont withSize(float size){
 		Font newFont = font.deriveFont(size);
-		System.out.println(newFont.getSize2D());
 		return new FormulaFont(col, newFont, align);		
 	}
 	
