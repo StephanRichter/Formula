@@ -18,7 +18,7 @@ public class Formula { // ------------------
 	
 	private String code;
 	private BufferedImage image;
-
+	private int fontSize;
 	
 	/***************************** Test *****************************/
 
@@ -637,8 +637,8 @@ public class Formula { // ------------------
 			metrics=new Canvas().getFontMetrics(font);
 		}
 		
-		public FormulaFont(){
-			this(Color.black,new Font("SansSerif",Font.PLAIN,14),LEFT);
+		public FormulaFont(int fontSize){
+			this(Color.black,new Font("SansSerif",Font.PLAIN,fontSize),LEFT);
 		}
 
 		public FormulaFont bold() {
@@ -693,7 +693,7 @@ public class Formula { // ------------------
 	/***************************** Konstruktor ************************************/
 	public Formula(String code) {
 		this.code = doReplacements(code);
-		image=render(new StringBuffer(this.code),new FormulaFont());
+		image=render(new StringBuffer(this.code),new FormulaFont(12));
 	}
 	/***************************** Rendering ************************************/
 
@@ -729,9 +729,15 @@ public class Formula { // ------------------
 		if (text==null || text.isEmpty()) return null;
 		int width=font.stringWidth(text);
 		int height=font.getHeight();
+		if (height<1 || width<1) return null;
 		BufferedImage result=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g=graphics(result,font);
-		g.drawString(text, 0,height*3/4);
+		try {
+			g.drawString(text, 0,height*3/4);
+		} catch (ArrayIndexOutOfBoundsException aoobe){
+			aoobe.printStackTrace();
+			return null;
+		}
 		return result;
 	}
 	
@@ -833,7 +839,8 @@ public class Formula { // ------------------
 			g.drawString("\u2713", font.getHeight()/10, font.getHeight()*3/4);
 			return image;
 		}
-		System.out.println("unknown command '"+command+"'");
+		if (command.isEmpty()) return null;
+		System.err.println("unknown command '"+command+"'");
 		return renderText(command, font);
 	}
 	private static BufferedImage renderCommand(String cmd, StringBuffer code, FormulaFont font) {
@@ -1096,6 +1103,7 @@ public class Formula { // ------------------
 		BufferedImage numerator = render(para.firstElement(),font);
 		BufferedImage denominator=render(para.lastElement(),font);
 		if (numerator==null) return null;
+		if (denominator==null) return null;
 		int width=Math.max(numerator.getWidth(), denominator.getWidth());
 		BufferedImage result=new BufferedImage(width, numerator.getHeight()+denominator.getHeight()+1, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g=graphics(result,font);
@@ -1184,6 +1192,7 @@ public class Formula { // ------------------
 	private static BufferedImage renderSubscript(StringBuffer code, FormulaFont font) {
 		FormulaFont small = font.smaller();
 		BufferedImage image=render(code,small);
+		if (image==null) return null;
 		BufferedImage result=new BufferedImage(image.getWidth(), image.getHeight()+font.getHeight(), BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g=(Graphics2D) result.getGraphics();
 		g.drawImage(image, 0, image.getHeight(), null);
@@ -1270,12 +1279,17 @@ public class Formula { // ------------------
 		return "<formula>" + this.toString() + "</formula>";
 	}
 	
-	public BufferedImage image(){
+	public BufferedImage image(int fontSize){
+		if (this.fontSize!=fontSize){
+			image=render(new StringBuffer(this.code),new FormulaFont(fontSize));
+		}
 		return image;
 	}
 	
-	public Dimension getSize() {
-		return new Dimension(image.getWidth(),image.getHeight());
+	public Dimension getSize(int fontSize) {
+		BufferedImage img = image(fontSize);
+		if (img==null) return new Dimension();
+		return new Dimension(img.getWidth(),img.getHeight());
 	}
 
 	
