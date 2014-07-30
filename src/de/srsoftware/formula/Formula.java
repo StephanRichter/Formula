@@ -10,10 +10,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
-import java.util.Stack;
 import java.util.Vector;
-
-import javax.swing.JLabel;
 
 public class Formula { // ------------------
 	
@@ -669,22 +666,6 @@ public class Formula { // ------------------
 		resetDimension();
 	}
 	
-	private boolean smallest(int a, int b,int c){
-		if (a==-1) a=Integer.MAX_VALUE;
-		if (b==-1) b=Integer.MAX_VALUE;
-		if (c==-1) c=Integer.MAX_VALUE;
-		return a<b && a<c;
-	}
-	
-	private class Part{
-		public BufferedImage renderedPart;
-		public String remainingCode;
-		public Part(BufferedImage img,String code) {
-			renderedPart=img;
-			remainingCode=code;
-		}
-	}
-	
 	private static BufferedImage render(StringBuffer code, FormulaFont font) {
 		Vector<BufferedImage> parts=new Vector<BufferedImage>();
 		while (code.length()>0){
@@ -788,7 +769,7 @@ public class Formula { // ------------------
 //		if (cmd.equals("interv")) return drawIntervall(g, new Point(x, y), param, visible);
 		if ((cmd.equals("it")) || (cmd.equals("italic"))) return render(code, font.italic());
 //		if (cmd.equals("lim")) return drawBlock(g, new Point(x, y), ";lim;\\^{" + param + "}", visible);
-//		if (cmd.equals("matrix")) return drawMatrix(g, new Point(x, y), param, visible);
+		if (cmd.equals("matrix")) return renderMatrix(code,font);
 		if (cmd.equals("overline")) return overline(code,font);
 		if (cmd.equals("prod")) return renderIntervall(code, "\u220F", font);
 //		if (cmd.equals("rblock")) return drawRBlock(g, new Point(x, y), param, visible);
@@ -804,6 +785,25 @@ public class Formula { // ------------------
 //		if (cmd.equals("vector")) return drawVector(g, new Point(x, y), param, visible);
 		System.out.println(cmd+"("+code+")");
     return render(code, font);
+	}
+	private static BufferedImage renderMatrix(StringBuffer code, FormulaFont font) {
+		BufferedImage image=renderBlock(code, font);
+		if (image==null) return null;
+		int h=image.getHeight();
+		int w=image.getWidth();
+		BufferedImage result=new BufferedImage(w+20,h,BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g=(Graphics2D) result.getGraphics();
+		g.drawImage(image,10,0,null);
+		font.applyTo(g);		
+		g.drawLine(5, 5, 10, 0); // /
+		g.drawLine(5, 5, 5, h - 5); // |
+		g.drawLine(5, h - 5, 10, h); // \
+
+		g.drawLine(w + 15, 5, 10 + w, 0);     // \
+		g.drawLine(w + 15, 5, 15 + w, h - 5); // |
+		g.drawLine(w + 15, h - 5, 10 + w, h); // /
+
+		return result;
 	}
 	private static BufferedImage renderFrac(StringBuffer parameters, FormulaFont font) {
 		Vector<String> para=readParameters(parameters.toString());
