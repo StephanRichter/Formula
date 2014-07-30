@@ -12,8 +12,6 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.Vector;
 
-import javax.swing.text.StyleContext.SmallAttributeSet;
-
 public class Formula { // ------------------
 	
 	private final static int CENTER=1;
@@ -616,18 +614,20 @@ public class Formula { // ------------------
 		Color col;
 		Font font;
 		FontMetrics metrics;
-		public FormulaFont(Color c,Font f) {
+		int align;
+		public FormulaFont(Color c,Font f,int align) {
+			this.align=align;
 			col=c;
 			font=f;
 			metrics=new Canvas().getFontMetrics(font);
 		}
 		
 		public FormulaFont(){
-			this(Color.black,new Font("SansSerif",Font.PLAIN,14));
+			this(Color.black,new Font("SansSerif",Font.PLAIN,14),LEFT);
 		}
 
 		public FormulaFont bold() {
-			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle() | Font.BOLD, font.getSize()));
+			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle() | Font.BOLD, font.getSize()),align);
 		}
 
 		public int stringWidth(String text) {
@@ -644,24 +644,36 @@ public class Formula { // ------------------
 		}
 
 		public FormulaFont italic() {
-			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle() | Font.ITALIC, font.getSize()));
+			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle() | Font.ITALIC, font.getSize()),align);
 		}
 
 		public FormulaFont monospaced() {
-			return new FormulaFont(col, new Font("Monospaced", font.getStyle(), font.getSize()));
+			return new FormulaFont(col, new Font("Monospaced", font.getStyle(), font.getSize()),align);
 		}
 
 		public FormulaFont smaller() {
-			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle(), font.getSize()*3/4));
+			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle(), font.getSize()*3/4),align);
 		}
 
 		public FormulaFont bigger() {
-			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle(), font.getSize()*4/3));
+			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle(), font.getSize()*4/3),align);
 		}
 
 		public FormulaFont color(Color color) {
-			return new FormulaFont(color, new Font(font.getFontName(), font.getStyle(), font.getSize()));
-		}		
+			return new FormulaFont(color, new Font(font.getFontName(), font.getStyle(), font.getSize()),align);
+		}
+		public FormulaFont rightAligned() {
+	    return new FormulaFont(col, font,RIGHT);
+    }
+
+		public FormulaFont leftAligned() {
+			return new FormulaFont(col, font,LEFT);
+    }		
+
+		public FormulaFont centered() {
+			return new FormulaFont(col, font,CENTER);
+    }		
+
 	}
 
 	/***************************** Konstruktor ************************************/
@@ -677,7 +689,7 @@ public class Formula { // ------------------
 		while (code.length()>0){
 			parts.add(renderLine(code, font));			
 		}
-		return composeColumn(parts,LEFT);
+		return composeColumn(parts,font.align);
 	}
 	
 	private static BufferedImage composeColumn(Vector<BufferedImage> parts,int alignment) {
@@ -753,23 +765,24 @@ public class Formula { // ------------------
 		if (cmd.equals("~")) return renderTilde(code,font);
 		if (cmd.equals("arrow")) return renderVector(code,font);
 		if (cmd.equals("big")) return render(code,font.bigger());
-		if (cmd.equals("block")) return renderBlock(code,font);
+		if (cmd.equals("block")) return renderBlock(code,font.leftAligned());
 		if ((cmd.equals("bold")) || (cmd.equals("bf"))) return render(code, font.bold());
 		if (cmd.equals("cases")) return renderCases(code,font);
 		if (cmd.equals("cap")) return renderIntervall(code, "\u22C2", font);
 		if (cmd.equals("Cap")) return renderIntervall(code, "\u22C0", font);
 		if (cmd.equals("ceil")) return renderCeiling(code, font);
+		if (cmd.equals("center")) return renderBlock(code, font.centered());
 		if (cmd.equals("color")) return renderColored(code,font);
 		if (cmd.equals("cup")) return renderIntervall(code, "\u22C3", font);
 		if (cmd.equals("cup+")) return renderIntervall(code, "\u228e", font);
 		if (cmd.equals("Cup")) return renderIntervall(code, "\u22c1", font);
 		if (cmd.equals("det")) return renderDeterminant(code,font);
-//		if (cmd.equals("dot")) return drawWithDot(g, new Point(x, y), param, visible);
+		if (cmd.equals("dot")) return rendetWithDot(code,font);
 		if (cmd.equals("exists")) return renderIntervall(code, "\u2203", font);
 		if (cmd.equals("floor")) return renderFloor(code,font);
 		if (cmd.equals("forall")) return renderIntervall(code, "\u2200", font);
 		if (cmd.equals("frac")) return renderFrac(code,font);
-//		if (cmd.equals("hat")) return drawWithHat(g, new Point(x, y), param, visible);
+		if (cmd.equals("hat")) return renderWithHat(code,font);
 		if (cmd.equals("index")) return render("\\block{"+code+"}", font.smaller());
 		if (cmd.equals("integr")) return renderIntervall(code, "\u222B", font);
 		if (cmd.equals("interv")) return renderIntervall(code,font);
@@ -778,10 +791,10 @@ public class Formula { // ------------------
 		if (cmd.equals("matrix")) return renderMatrix(code,font);
 		if (cmd.equals("overline")) return overline(code,font);
 		if (cmd.equals("prod")) return renderIntervall(code, "\u220F", font);
-//		if (cmd.equals("rblock")) return drawRBlock(g, new Point(x, y), param, visible);
+		if (cmd.equals("rblock")) return renderBlock(code,font.rightAligned());
 		if (cmd.equals("rgb")) return renderRGBColored(code,font);
 		if (cmd.equals("root")) return renderRoot(code,font);
-//		if (cmd.equals("set")) return drawSet(g, new Point(x, y), param, visible);
+		if (cmd.equals("set")) return renderSet(code,font);
 		if (cmd.equals("small")) return render(code,font.smaller());
 		if (cmd.equals("strike")) return drawStriked(code,font);
 		if (cmd.equals("sum")) return renderIntervall(code, "\u2211", font);
@@ -792,7 +805,53 @@ public class Formula { // ------------------
 		System.out.println(cmd+"("+code+")");
     return render(code, font);
 	}
+	
+	private static BufferedImage renderSet(StringBuffer code, FormulaFont font) {
+		BufferedImage image=renderBlock(code, font);
+		if (image==null) return null;
+		int h=image.getHeight();
+		int w=image.getWidth()+10;
+		BufferedImage result=new BufferedImage(w+10,h,BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g=graphics(result,font);
+		g.drawImage(image,10,0,null);
+		g.drawLine(5, 5,10, 0); 																	// /
+		g.drawLine(5, h/2-5,  5,  5); 													// |
+		g.drawLine(0,  h/2,  5,  h/2-5); 															// /
+		g.drawLine(0,  h/2,  5,  h/2+5); 															// \
+		g.drawLine(5,  h/2+5, 5,  h - 5); 					// |
+		g.drawLine(5,  h-5,  10, h); 	// \
+		
+		g.drawLine( w,  0, w+5 , 5); 																// /
+		g.drawLine( w+5,  5,  w+5,  h/2-5); 											// |
+		g.drawLine( w+5, h/2-5,  w+10,  h/2); 										// /
+		g.drawLine( w+10,  h/2,  w+5,  h/2+5); 											// \
+		g.drawLine( w+5,  h/2+5,  w+5,  h - 5); 		 	// |
+		g.drawLine( w+5,  h - 5, w,  h); 	// \
 
+		return result;
+	}
+	private static BufferedImage renderWithHat(StringBuffer code, FormulaFont font) {
+		BufferedImage image = render(code,font);
+		if (image==null) return null;
+		int d=font.getHeight()/3;
+		BufferedImage result=new BufferedImage(image.getWidth(), image.getHeight()+d, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = graphics(result, font);
+		g.drawImage(image, 0, d, null);
+		g.drawLine(0, d, image.getWidth()/2, 0);
+		g.drawLine(image.getWidth()/2, 0, image.getWidth(), d);
+	  return result;
+  }
+
+	private static BufferedImage rendetWithDot(StringBuffer code, FormulaFont font) {
+		BufferedImage image = render(code,font);
+		if (image==null) return null;
+		int d=font.getHeight()/3;
+		BufferedImage result=new BufferedImage(image.getWidth(), image.getHeight()+d, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = graphics(result, font);
+		g.drawImage(image, 0, d, null);
+		g.drawOval(result.getWidth() / 2 - font.getHeight()/6, 0, font.getHeight()/4, font.getHeight()/4);
+	  return result;
+  }
 	private static BufferedImage renderDeterminant(StringBuffer code, FormulaFont font) {
 			BufferedImage image=renderBlock(code, font);
 			if (image==null) return null;
