@@ -657,6 +657,10 @@ public class Formula { // ------------------
 
 		public FormulaFont bigger() {
 			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle(), font.getSize()*4/3));
+		}
+
+		public FormulaFont color(Color color) {
+			return new FormulaFont(color, new Font(font.getFontName(), font.getStyle(), font.getSize()));
 		}		
 	}
 
@@ -755,7 +759,7 @@ public class Formula { // ------------------
 		if (cmd.equals("cap")) return renderIntervall(code, "\u22C2", font);
 		if (cmd.equals("Cap")) return renderIntervall(code, "\u22C0", font);
 		if (cmd.equals("ceil")) return renderCeiling(code, font);
-//		if (cmd.equals("color")) return drawColored(g, new Point(x, y), param, visible);
+		if (cmd.equals("color")) return renderColored(code,font);
 		if (cmd.equals("cup")) return renderIntervall(code, "\u22C3", font);
 		if (cmd.equals("cup+")) return renderIntervall(code, "\u228e", font);
 		if (cmd.equals("Cup")) return renderIntervall(code, "\u22c1", font);
@@ -775,7 +779,7 @@ public class Formula { // ------------------
 		if (cmd.equals("overline")) return overline(code,font);
 		if (cmd.equals("prod")) return renderIntervall(code, "\u220F", font);
 //		if (cmd.equals("rblock")) return drawRBlock(g, new Point(x, y), param, visible);
-//		if (cmd.equals("rgb")) return drawRGBColored(g, new Point(x, y), param, visible);
+		if (cmd.equals("rgb")) return renderRGBColored(code,font);
 		if (cmd.equals("root")) return renderRoot(code,font);
 //		if (cmd.equals("set")) return drawSet(g, new Point(x, y), param, visible);
 		if (cmd.equals("small")) return render(code,font.smaller());
@@ -789,6 +793,38 @@ public class Formula { // ------------------
     return render(code, font);
 	}
 
+	private static BufferedImage renderRGBColored(StringBuffer parameters, FormulaFont font) {
+		Vector<String> para=readParameters(parameters.toString());
+		if (para.size()>1){
+			String param=para.firstElement();
+			int r = 0;
+			int y = 0;
+			int b = 0;
+			try {
+				r = Integer.decode("0x" + param.substring(0, 2)).intValue();
+				y = Integer.decode("0x" + param.substring(2, 4)).intValue();
+				b = Integer.decode("0x" + param.substring(4, 6)).intValue();
+			} catch (Exception e) {}
+			return render(parameters.substring(param.length()+1),font.color(new Color(r,y,b)));
+		}
+		return render(parameters,font);
+	}
+	private static BufferedImage renderColored(StringBuffer parameters, FormulaFont font) {
+		Vector<String> para=readParameters(parameters.toString());
+		if (para.size()>1){
+			String param=para.firstElement();
+			int r = 0;
+			int y = 0;
+			int b = 0;
+			try {
+				b = Integer.decode("0x" + param.substring(0, 2)).intValue();
+				y = Integer.decode("0x" + param.substring(2, 4)).intValue();
+				r = Integer.decode("0x" + param.substring(4, 6)).intValue();
+			} catch (Exception e) {}
+			return render(parameters.substring(param.length()+1),font.color(new Color(r,y,b)));
+		}
+		return render(parameters,font);
+	}
 	private static BufferedImage renderIntervall(StringBuffer parameters, FormulaFont font) {
 		Vector<String> para=readParameters(parameters.toString());
 		FormulaFont smallFont = font.smaller();
