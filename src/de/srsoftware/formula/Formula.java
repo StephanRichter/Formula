@@ -747,7 +747,7 @@ public class Formula { // ------------------
 		if (cmd.equals("^")) return renderSuperscript(code,font);
 		if (cmd.equals("_")) return renderSubscript(code,font);
 		if (cmd.equals("~")) return renderTilde(code,font);
-		//if (cmd.equals("arrow")) return drawUnderArrow(g, new Point(x, y), param, visible);
+		if (cmd.equals("arrow")) return renderwithArrow(code,font);
 		//if (cmd.equals("big")) return drawBigger(g, new Point(x, y + 1), param, visible);
 		//if (cmd.equals("block")) return drawBlock(g, new Point(x, y), param, visible);
 		if ((cmd.equals("bold")) || (cmd.equals("bf"))) return render(code, font.bold());
@@ -781,12 +781,26 @@ public class Formula { // ------------------
 //		if (cmd.equals("small")) return drawSmaller(g, new Point(x, y + 1), param, visible);
 //		if (cmd.equals("strike")) return drawStriked(g, new Point(x, y), param, visible);
 //		if (cmd.equals("sum")) return drawIntervallSign(g, new Point(x, y), param, "\u2211", visible);
-//		if (cmd.equals("tilde")) return drawWithTilde(g, new Point(x, y), param, visible);
+		if (cmd.equals("tilde")) return renderTilde(code,font);
 		if (cmd.equals("type")) return render(code,font.monospaced());
 		if (cmd.equals("underline")) return underline(code,font);
 //		if (cmd.equals("vector")) return drawVector(g, new Point(x, y), param, visible);
 		System.out.println(cmd+"("+code+")");
     return render(code, font);
+	}
+	private static BufferedImage renderwithArrow(StringBuffer code, FormulaFont font) {
+		BufferedImage image=render(code,font);
+		if (image==null) return null;
+		int d=font.getHeight()/4;
+		BufferedImage result=new BufferedImage(image.getWidth()+d, image.getHeight()+d, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g=(Graphics2D) result.getGraphics();
+		g.drawImage(image, 0, d, null);
+		font.applyTo(g);
+		g.drawLine(0, d, image.getWidth()+d, d);		
+		g.drawLine(image.getWidth(), 0, image.getWidth()+d, d);		
+		g.drawLine(image.getWidth(), d+d, image.getWidth()+d, d);	
+		
+		return result;
 	}
 	private static BufferedImage renderTilde(StringBuffer code, FormulaFont font) {
 		BufferedImage image=render(code,font);
