@@ -687,7 +687,6 @@ public class Formula { // ------------------
 	
 	private static BufferedImage render(StringBuffer code, FormulaFont font) {
 		Vector<BufferedImage> parts=new Vector<BufferedImage>();
-		StringBuffer chunk=new StringBuffer();
 		while (code.length()>0){
 			parts.add(renderLine(code, font));			
 		}
@@ -779,10 +778,10 @@ public class Formula { // ------------------
 		if (cmd.equals("Cup")) return renderIntervall(code, "\u22c1", font);
 //		if (cmd.equals("det")) return drawDeterminant(g, new Point(x, y), param, visible);
 //		if (cmd.equals("dot")) return drawWithDot(g, new Point(x, y), param, visible);
-//		if (cmd.equals("exists")) return drawIntervallSign(g, new Point(x, y), param, "\u2203", visible);
+		if (cmd.equals("exists")) return renderIntervall(code, "\u2203", font);
 //		if (cmd.equals("floor")) return drawFloor(g, new Point(x, y), param, visible);
 		if (cmd.equals("forall")) return renderIntervall(code, "\u2200", font);
-//		if (cmd.equals("frac")) return drawFrac(g, new Point(x, y), param, visible);
+		if (cmd.equals("frac")) return renderFrac(code,font);
 //		if (cmd.equals("hat")) return drawWithHat(g, new Point(x, y), param, visible);
 //		if (cmd.equals("index")) return drawSmaller(g, new Point(x, y + 1), "\\block{"+param+"}", visible);
 		if (cmd.equals("integr")) return renderIntervall(code, "\u222B", font);
@@ -796,7 +795,7 @@ public class Formula { // ------------------
 //		if (cmd.equals("rgb")) return drawRGBColored(g, new Point(x, y), param, visible);
 //		if (cmd.equals("root")) return drawRoot(g, new Point(x, y), param, visible);
 //		if (cmd.equals("set")) return drawSet(g, new Point(x, y), param, visible);
-//		if (cmd.equals("small")) return drawSmaller(g, new Point(x, y + 1), param, visible);
+		if (cmd.equals("small")) return render(code,font.smaller());
 //		if (cmd.equals("strike")) return drawStriked(g, new Point(x, y), param, visible);
 		if (cmd.equals("sum")) return renderIntervall(code, "\u2211", font);
 		if (cmd.equals("tilde")) return renderTilde(code,font);
@@ -806,16 +805,33 @@ public class Formula { // ------------------
 		System.out.println(cmd+"("+code+")");
     return render(code, font);
 	}
+	private static BufferedImage renderFrac(StringBuffer parameters, FormulaFont font) {
+		Vector<String> para=readParameters(parameters.toString());
+		BufferedImage numerator = render(para.firstElement(),font);
+		BufferedImage denominator=render(para.lastElement(),font);
+		if (numerator==null) return null;
+		int width=Math.max(numerator.getWidth(), denominator.getWidth());
+		BufferedImage result=new BufferedImage(width, numerator.getHeight()+denominator.getHeight()+1, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g=(Graphics2D) result.getGraphics();
+		font.applyTo(g);
+		g.drawImage(numerator, (width-numerator.getWidth())/2, 0, null);		
+		g.drawImage(denominator, (width-denominator.getWidth())/2, numerator.getHeight()+1, null);
+		g.drawLine(0, numerator.getHeight()+1, width, numerator.getHeight()+1);
+		return result;
+	}
+	private static BufferedImage render(String code, FormulaFont font) {
+		return render(new StringBuffer(code),font);
+	}
 	private static BufferedImage renderIntervall(StringBuffer parameters, String symbol, FormulaFont font) {
 		Vector<String> para=readParameters(parameters.toString());
 		Vector<BufferedImage> parts=new Vector<BufferedImage>();
 		
 		if (para.size()>1){
-			parts.add(render(new StringBuffer(para.get(1)),font.smaller()));
+			parts.add(render(para.get(1),font.smaller()));
 		}
 		parts.add(renderText(symbol, font.bigger()));
 		if (para.size()>0){
-			parts.add(render(new StringBuffer(para.get(0)),font.smaller()));
+			parts.add(render(para.get(0),font.smaller()));
 		}
 		return composeColumn(parts,CENTER);
 	}
