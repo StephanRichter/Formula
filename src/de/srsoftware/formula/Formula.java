@@ -17,7 +17,7 @@ public class Formula { // ------------------
 	private final static int RIGHT=2;
 	
 	private String code;
-	private static BufferedImage image;
+	private BufferedImage image;
 
 	
 	/***************************** Test *****************************/
