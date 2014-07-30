@@ -15,7 +15,11 @@ public class Formula { // ------------------
 	private final static int LEFT=0;
 	private final static int RIGHT=2;
 	
-	/***************************** Zeichenoperationen *****************************/
+	private String code;
+	private static BufferedImage image;
+
+	
+	/***************************** Test *****************************/
 
 	public static void main(String[] args) {
 		String code="Dies ist ein {fett \\it{krasser}} \\Alpha -Test! Mach \\underline{das} mal nach!";
@@ -23,8 +27,36 @@ public class Formula { // ------------------
 		Formula f = new Formula(code);
 		System.out.println(f.getText());
 	}
-	/***************************** Initialisierung ********************************/
-	/****************************** Abfragen **************************************/
+
+	/***************************** HTML generation *****************************/
+	
+	/**
+	 * this method is used to export the current formula to html
+	 * @return html code of this formula
+	 */
+	public String getHtmCode() {
+		String result = connectBrackets(code);
+		result = replaceSpecialSigns(result);
+		result = replaceBoldSymbols(result);
+		result = replaceTypeSymbols(result);
+		result = replaceItalicSymbols(result);
+		result = replaceRGBTags(result);
+		result = replaceColorTags(result);
+		result = replaceSuperscriptSymbols(result);
+		result = replaceSubscriptSymbols(result);
+		result = replaceUnderlinedSymbols(result);
+		result = replaceSymbolsWithArrow(result);
+		result = replaceCases(result);
+		result = replaceRootedSymbols(result);
+		result = replaceFracs(result);
+		result = StrReplace(result, "~CASES~", "<td style=\"border-left-style: solid; border-left-width: 2px\">");
+		return result;
+	}
+	/**
+	 * This method adds closing brackets to the code, if they are missing
+	 * @param inp the chunk of code to be healed
+	 * @return the chunk of code with appended brackets
+	 */
 	private static String connectBrackets(String inp) {
 		String result = new String(inp);
 		int l = result.length();
@@ -47,289 +79,6 @@ public class Formula { // ------------------
 		}
 		return result;
 	}
-	private static String replaceBoldSymbols(String inp) {
-		int i = inp.indexOf("\\bold{");
-		while (i > -1) {
-			int j = i + 6;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			inp = inp.substring(0, i) + "<b>" + inp.substring(i + 6, j - 1) + "</b>" + inp.substring(j);
-			i = inp.indexOf("\\bold{");
-		}
-		return inp;
-	}
-	private static String replaceCases(String inp) {
-		int i = inp.indexOf("\\cases{");
-		if (i > -1) {
-			int j = i + 7;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			String prefix = inp.substring(0, i);
-			String infix = inp.substring(i + 7, j - 1);
-			String suffix = inp.substring(j);
-
-			i = 0; // Position
-			b = 0; // z�hlt Klammern
-			int last = 0;
-			int s = 0; // z�hlt Semikolons
-			while (i < infix.length()) {
-				if (infix.charAt(i) == '{') b++;
-				if (infix.charAt(i) == '}') b--;
-				if ((infix.charAt(i) == ';') && (b == 0)) {
-					s++;
-					infix = infix.substring(0, last) + replaceCases(infix.substring(last, i)) + "<br>" + replaceCases(infix.substring(i + 1));
-					last = i;
-				}
-				i++;
-			}
-			if (s == 0) {
-				i = 0; // Position
-				b = 0; // z�hlt Klammern
-				while (i < infix.length()) {
-					if (infix.charAt(i) == '{') b++;
-					if (infix.charAt(i) == '}') b--;
-					if ((infix.charAt(i) == ',') && (b == 0)) {
-						infix = infix.substring(0, last) + replaceCases(infix.substring(last, i)) + "<br>" + replaceCases(infix.substring(i + 1));
-						last = i;
-					}
-					i++;
-				}
-			}
-
-			inp = "<table border=\"0\" cellspacing=\"0\" bordercolor=\"#000000\">\n";
-			inp = inp + "  <tr>\n    <td>" + prefix + "</td>\n    ";
-			inp = inp + "~CASES~" + infix + "</td>\n    ";
-			inp = inp + "<td>" + replaceCases(suffix) + "</td>\n  </tr>\n</table>";
-		}
-		return inp;
-	}
-
-	private static String replaceColorTags(String inp) {
-		int i = inp.indexOf("\\color{");
-		while (i > -1) {
-			int j = i + 7;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			inp = inp.substring(0, i) + "<font color=" + inp.substring(i + 11, i + 13) + inp.substring(i + 9, i + 11) + inp.substring(i + 7, i + 9) + ">" + inp.substring(i + 14, j - 1) + "</font>" + inp.substring(j);
-			i = inp.indexOf("\\color{");
-		}
-		return inp;
-	}
-
-	private static String replaceFracs(String inp) {
-		int i = inp.indexOf("\\frac{");
-		if (i > -1) {
-			int j = i + 6;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			String prefix = inp.substring(0, i);
-			String infix1 = inp.substring(i + 6, j - 1);
-			String suffix = inp.substring(j);
-			b = 0;
-			int l = 0;
-			int k = 0; // mekr Position des letzten Kommas
-			int s = 0; // mekr Position des letzten Semikolon
-			while (l < infix1.length()) {
-				switch (infix1.charAt(l)) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				case ',': {
-					if (b == 0) k = l;
-					break;
-				}
-				case ';': {
-					if (b == 0) s = l;
-					break;
-				}
-				}
-				l++;
-			}
-
-			if (s > 0) k = s; // wenn Semikolon gefunden, dann Semikolon nehmen, sonst komma nehmen nehmen
-			String infix2 = infix1.substring(k + 1);
-			infix1 = infix1.substring(0, k);
-			inp = "<table border=\"0\" cellspacing=\"0\" bordercolor=\"#000000\">\n";
-			inp = inp + "  <tr>\n    <td rowspan=\"2\">" + prefix + "</td>\n    ";
-			inp = inp + "<td style=\"border-bottom-style: solid; border-bottom-width: 1px\" align=\"center\">" + replaceFracs(infix1) + "</td>\n    ";
-			inp = inp + "<td rowspan=\"2\">" + replaceFracs(suffix) + "</td>\n  </tr>\n";
-			inp = inp + "  <tr><td align=\"center\">" + replaceFracs(infix2) + "</td>\n</tr></table>";
-		}
-		return inp;
-	}
-
-	private static String replaceItalicSymbols(String inp) {
-		int i = inp.indexOf("\\it{");
-		while (i > -1) {
-			int j = i + 4;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			inp = inp.substring(0, i) + "<i>" + inp.substring(i + 4, j - 1) + "</i>" + inp.substring(j);
-			i = inp.indexOf("\\it{");
-		}
-		return inp;
-	}
-
-	private static String replaceRGBTags(String inp) {
-		int i = inp.indexOf("\\rgb{");
-		while (i > -1) {
-			int j = i + 5;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			inp = inp.substring(0, i) + "<font color=" + inp.substring(i + 5, i + 11) + ">" + inp.substring(i + 12, j - 1) + "</font>" + inp.substring(j);
-			i = inp.indexOf("\\rgb{");
-		}
-		return inp;
-	}
-
-	private static String replaceRootedSymbols(String inp) {
-		int i = inp.indexOf("\\root{");
-		while (i > -1) {
-			int j = i + 6;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			String infix = inp.substring(i + 6, j - 1);
-			System.out.println(infix);
-			b = 0;
-			int l = 0;
-			int k = 0; // mekr Position des letzten Kommas
-			int s = 0; // mekr Position des letzten Semikolon
-			while (l < infix.length()) {
-				switch (infix.charAt(l)) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				case ',': {
-					if (b == 0) k = l;
-				}
-				case ';': {
-					if (b == 0) s = l;
-				}
-				}
-				l++;
-			}
-			if (s + k > 0) {
-				if (s > 0) k = s; // wenn Semikolon gefunden, dann Semikolon nehmen, sonst komma nehmen nehmen
-				String rad = infix.substring(0, k);
-				infix = infix.substring(k + 1);
-				System.out.println(rad);
-				System.out.println(infix);
-				inp = inp.substring(0, i) + "<sup>" + rad + "</sup>&radic;<span style=\"text-decoration: overline\">" + infix + "</span>" + inp.substring(j);
-			} else
-				inp = inp.substring(0, i) + "&radic;<span style=\"text-decoration: overline\">" + infix + "</span>" + inp.substring(j);
-			i = inp.indexOf("\\root{");
-		}
-		return inp;
-	}
-
 	private static String replaceSpecialSigns(String inp) {
 		inp = StrReplace(inp, "<", "&lt;");
 		inp = StrReplace(inp, ">", "&gt;");
@@ -457,11 +206,10 @@ public class Formula { // ------------------
 		inp = StrReplace(inp, "\\Zeta ", "&Zeta;");
 		return inp;
 	}
-
-	private static String replaceSubscriptSymbols(String inp) {
-		int i = inp.indexOf("\\_{");
+	private static String replaceBoldSymbols(String inp) {
+		int i = inp.indexOf("\\bold{");
 		while (i > -1) {
-			int j = i + 3;
+			int j = i + 6;
 			int b = 1;
 			char c = '?';
 			while ((j < inp.length()) && (b > 0)) {
@@ -478,64 +226,11 @@ public class Formula { // ------------------
 				}
 				j++;
 			}
-			inp = inp.substring(0, i) + "<sub>" + inp.substring(i + 3, j - 1) + "</sub>" + inp.substring(j);
-			i = inp.indexOf("\\_{");
+			inp = inp.substring(0, i) + "<b>" + inp.substring(i + 6, j - 1) + "</b>" + inp.substring(j);
+			i = inp.indexOf("\\bold{");
 		}
 		return inp;
 	}
-
-	private static String replaceSuperscriptSymbols(String inp) {
-		int i = inp.indexOf("\\^{");
-		while (i > -1) {
-			int j = i + 3;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			inp = inp.substring(0, i) + "<sup>" + inp.substring(i + 3, j - 1) + "</sup>" + inp.substring(j);
-			i = inp.indexOf("\\^{");
-		}
-		return inp;
-	}
-
-	private static String replaceSymbolsWithArrow(String inp) {
-		int i = inp.indexOf("\\arrow{");
-		while (i > -1) {
-			int j = i + 7;
-			int b = 1;
-			char c = '?';
-			while ((j < inp.length()) && (b > 0)) {
-				c = inp.charAt(j);
-				switch (c) {
-				case '{': {
-					b++;
-					break;
-				}
-				case '}': {
-					b--;
-					break;
-				}
-				}
-				j++;
-			}
-			inp = inp.substring(0, i) + "<span style=\"text-decoration: overline\">" + inp.substring(i + 7, j - 1) + "</span><sup><sup>&gt;</sup></sup>" + inp.substring(j);
-			i = inp.indexOf("\\arrow{");
-		}
-		return inp;
-	}
-
 	private static String replaceTypeSymbols(String inp) {
 		int i = inp.indexOf("\\type{");
 		while (i > -1) {
@@ -561,7 +256,131 @@ public class Formula { // ------------------
 		}
 		return inp;
 	}
-
+	private static String replaceItalicSymbols(String inp) {
+		int i = inp.indexOf("\\it{");
+		while (i > -1) {
+			int j = i + 4;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			inp = inp.substring(0, i) + "<i>" + inp.substring(i + 4, j - 1) + "</i>" + inp.substring(j);
+			i = inp.indexOf("\\it{");
+		}
+		return inp;
+	}
+	private static String replaceRGBTags(String inp) {
+		int i = inp.indexOf("\\rgb{");
+		while (i > -1) {
+			int j = i + 5;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			inp = inp.substring(0, i) + "<font color=" + inp.substring(i + 5, i + 11) + ">" + inp.substring(i + 12, j - 1) + "</font>" + inp.substring(j);
+			i = inp.indexOf("\\rgb{");
+		}
+		return inp;
+	}
+	private static String replaceColorTags(String inp) {
+		int i = inp.indexOf("\\color{");
+		while (i > -1) {
+			int j = i + 7;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			inp = inp.substring(0, i) + "<font color=" + inp.substring(i + 11, i + 13) + inp.substring(i + 9, i + 11) + inp.substring(i + 7, i + 9) + ">" + inp.substring(i + 14, j - 1) + "</font>" + inp.substring(j);
+			i = inp.indexOf("\\color{");
+		}
+		return inp;
+	}
+	private static String replaceSuperscriptSymbols(String inp) {
+		int i = inp.indexOf("\\^{");
+		while (i > -1) {
+			int j = i + 3;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			inp = inp.substring(0, i) + "<sup>" + inp.substring(i + 3, j - 1) + "</sup>" + inp.substring(j);
+			i = inp.indexOf("\\^{");
+		}
+		return inp;
+	}
+	private static String replaceSubscriptSymbols(String inp) {
+		int i = inp.indexOf("\\_{");
+		while (i > -1) {
+			int j = i + 3;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			inp = inp.substring(0, i) + "<sub>" + inp.substring(i + 3, j - 1) + "</sub>" + inp.substring(j);
+			i = inp.indexOf("\\_{");
+		}
+		return inp;
+	}
 	private static String replaceUnderlinedSymbols(String inp) {
 		int i = inp.indexOf("\\underline{");
 		while (i > -1) {
@@ -587,7 +406,208 @@ public class Formula { // ------------------
 		}
 		return inp;
 	}
+	private static String replaceSymbolsWithArrow(String inp) {
+		int i = inp.indexOf("\\arrow{");
+		while (i > -1) {
+			int j = i + 7;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			inp = inp.substring(0, i) + "<span style=\"text-decoration: overline\">" + inp.substring(i + 7, j - 1) + "</span><sup><sup>&gt;</sup></sup>" + inp.substring(j);
+			i = inp.indexOf("\\arrow{");
+		}
+		return inp;
+	}
+	private static String replaceCases(String inp) {
+		int i = inp.indexOf("\\cases{");
+		if (i > -1) {
+			int j = i + 7;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			String prefix = inp.substring(0, i);
+			String infix = inp.substring(i + 7, j - 1);
+			String suffix = inp.substring(j);
 
+			i = 0; // Position
+			b = 0; // z�hlt Klammern
+			int last = 0;
+			int s = 0; // z�hlt Semikolons
+			while (i < infix.length()) {
+				if (infix.charAt(i) == '{') b++;
+				if (infix.charAt(i) == '}') b--;
+				if ((infix.charAt(i) == ';') && (b == 0)) {
+					s++;
+					infix = infix.substring(0, last) + replaceCases(infix.substring(last, i)) + "<br>" + replaceCases(infix.substring(i + 1));
+					last = i;
+				}
+				i++;
+			}
+			if (s == 0) {
+				i = 0; // Position
+				b = 0; // z�hlt Klammern
+				while (i < infix.length()) {
+					if (infix.charAt(i) == '{') b++;
+					if (infix.charAt(i) == '}') b--;
+					if ((infix.charAt(i) == ',') && (b == 0)) {
+						infix = infix.substring(0, last) + replaceCases(infix.substring(last, i)) + "<br>" + replaceCases(infix.substring(i + 1));
+						last = i;
+					}
+					i++;
+				}
+			}
+
+			inp = "<table border=\"0\" cellspacing=\"0\" bordercolor=\"#000000\">\n";
+			inp = inp + "  <tr>\n    <td>" + prefix + "</td>\n    ";
+			inp = inp + "~CASES~" + infix + "</td>\n    ";
+			inp = inp + "<td>" + replaceCases(suffix) + "</td>\n  </tr>\n</table>";
+		}
+		return inp;
+	}
+	private static String replaceRootedSymbols(String inp) {
+		int i = inp.indexOf("\\root{");
+		while (i > -1) {
+			int j = i + 6;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			String infix = inp.substring(i + 6, j - 1);
+			System.out.println(infix);
+			b = 0;
+			int l = 0;
+			int k = 0; // mekr Position des letzten Kommas
+			int s = 0; // mekr Position des letzten Semikolon
+			while (l < infix.length()) {
+				switch (infix.charAt(l)) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				case ',': {
+					if (b == 0) k = l;
+				}
+				case ';': {
+					if (b == 0) s = l;
+				}
+				}
+				l++;
+			}
+			if (s + k > 0) {
+				if (s > 0) k = s; // wenn Semikolon gefunden, dann Semikolon nehmen, sonst komma nehmen nehmen
+				String rad = infix.substring(0, k);
+				infix = infix.substring(k + 1);
+				System.out.println(rad);
+				System.out.println(infix);
+				inp = inp.substring(0, i) + "<sup>" + rad + "</sup>&radic;<span style=\"text-decoration: overline\">" + infix + "</span>" + inp.substring(j);
+			} else
+				inp = inp.substring(0, i) + "&radic;<span style=\"text-decoration: overline\">" + infix + "</span>" + inp.substring(j);
+			i = inp.indexOf("\\root{");
+		}
+		return inp;
+	}
+	private static String replaceFracs(String inp) {
+		int i = inp.indexOf("\\frac{");
+		if (i > -1) {
+			int j = i + 6;
+			int b = 1;
+			char c = '?';
+			while ((j < inp.length()) && (b > 0)) {
+				c = inp.charAt(j);
+				switch (c) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				}
+				j++;
+			}
+			String prefix = inp.substring(0, i);
+			String infix1 = inp.substring(i + 6, j - 1);
+			String suffix = inp.substring(j);
+			b = 0;
+			int l = 0;
+			int k = 0; // mekr Position des letzten Kommas
+			int s = 0; // mekr Position des letzten Semikolon
+			while (l < infix1.length()) {
+				switch (infix1.charAt(l)) {
+				case '{': {
+					b++;
+					break;
+				}
+				case '}': {
+					b--;
+					break;
+				}
+				case ',': {
+					if (b == 0) k = l;
+					break;
+				}
+				case ';': {
+					if (b == 0) s = l;
+					break;
+				}
+				}
+				l++;
+			}
+
+			if (s > 0) k = s; // wenn Semikolon gefunden, dann Semikolon nehmen, sonst komma nehmen nehmen
+			String infix2 = infix1.substring(k + 1);
+			infix1 = infix1.substring(0, k);
+			inp = "<table border=\"0\" cellspacing=\"0\" bordercolor=\"#000000\">\n";
+			inp = inp + "  <tr>\n    <td rowspan=\"2\">" + prefix + "</td>\n    ";
+			inp = inp + "<td style=\"border-bottom-style: solid; border-bottom-width: 1px\" align=\"center\">" + replaceFracs(infix1) + "</td>\n    ";
+			inp = inp + "<td rowspan=\"2\">" + replaceFracs(suffix) + "</td>\n  </tr>\n";
+			inp = inp + "  <tr><td align=\"center\">" + replaceFracs(infix2) + "</td>\n</tr></table>";
+		}
+		return inp;
+	}
 	private static String StrReplace(String source, String pattern, String news) {
 		int i = source.indexOf(pattern);
 		while (i > -1) {
@@ -597,10 +617,13 @@ public class Formula { // ------------------
 		return source;
 	} // <font face=symbol></font>
 
-	private String code;
-
-	private static BufferedImage image;
+  /**************** end of HTML export methods *******************/
 	
+	
+	/**
+	 * @author srichter
+	 * This class is used to set font settings during rendering
+	 */
 	private class FormulaFont{
 		Color col;
 		Font font;
@@ -627,11 +650,6 @@ public class Formula { // ------------------
 
 		public int getHeight() {
 			return metrics.getHeight();
-		}
-
-		public void applyTo(Graphics2D g) {
-			g.setFont(font);
-			g.setColor(col);
 		}
 
 		public FormulaFont italic() {
@@ -664,7 +682,11 @@ public class Formula { // ------------------
 		public FormulaFont centered() {
 			return new FormulaFont(col, font,CENTER);
     }		
-
+		
+		public void applyTo(Graphics2D g) {
+			g.setFont(font);
+			g.setColor(col);
+		}
 	}
 
 	/***************************** Konstruktor ************************************/
@@ -672,13 +694,69 @@ public class Formula { // ------------------
 		code = doReplacements(code);
 		image=render(new StringBuffer(code),new FormulaFont());
 	}
-	
+	/***************************** Rendering ************************************/
+
 	private static BufferedImage render(StringBuffer code, FormulaFont font) {
 		Vector<BufferedImage> parts=new Vector<BufferedImage>();
 		while (code.length()>0){
 			parts.add(renderLine(code, font));			
 		}
 		return composeColumn(parts,font.align);
+	}
+	
+	private static BufferedImage renderLine(StringBuffer code, FormulaFont font) {
+		Vector<BufferedImage> parts=new Vector<BufferedImage>();
+		StringBuffer chunk=new StringBuffer();
+		while (code.length()>0){
+			if (code.charAt(0)=='\\'){				
+				parts.add(renderText(chunk.toString(), font));
+				if (code.length()>2 && code.charAt(1)=='n' && code.charAt(2)==' '){ // \n command found
+					code.delete(0, 3);
+					return composeLine(parts);
+				}
+				parts.add(parseCommand(code,font));
+				chunk=new StringBuffer();				
+			} else {
+				transferChar(code, chunk);
+			}
+		}
+		parts.add(renderText(chunk.toString(), font));
+		return composeLine(parts);
+	}
+	
+	private static BufferedImage renderText(String text, FormulaFont font){
+		if (text==null || text.isEmpty()) return null;
+		int width=font.stringWidth(text);
+		int height=font.getHeight();
+		BufferedImage result=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g=graphics(result,font);
+		g.drawString(text, 0,height*3/4);
+		return result;
+	}
+	
+	private static BufferedImage composeLine(Vector<BufferedImage> parts) {
+		int height=0;
+		int width=0;
+		for (BufferedImage image:parts){
+			if (image!=null){
+				height=Math.max(height, image.getHeight());
+				width+=image.getWidth();
+			}
+		}
+		if (height==0 || width==0){
+			return null;
+		}
+		BufferedImage result=new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g=(Graphics2D) result.createGraphics();
+		int x=0;
+		for (BufferedImage image:parts){
+			if (image!=null){
+				g.drawImage(image, x, (height-image.getHeight())/2, null);
+				x+=image.getWidth();
+				image=null;
+			}
+		}
+		return result;		
 	}
 	
 	private static BufferedImage composeColumn(Vector<BufferedImage> parts,int alignment) {
@@ -712,26 +790,6 @@ public class Formula { // ------------------
 		}
 		return result;		
 	}
-	private static BufferedImage renderLine(StringBuffer code, FormulaFont font) {
-		Vector<BufferedImage> parts=new Vector<BufferedImage>();
-		StringBuffer chunk=new StringBuffer();
-		while (code.length()>0){
-			if (code.charAt(0)=='\\'){				
-				parts.add(renderText(chunk.toString(), font));
-				if (code.length()>2 && code.charAt(1)=='n' && code.charAt(2)==' '){ // \n command found
-					code.delete(0, 3);
-					return composeLine(parts);
-				}
-				parts.add(parseCommand(code,font));
-				chunk=new StringBuffer();				
-			} else {
-				transferChar(code, chunk);
-			}
-		}
-		parts.add(renderText(chunk.toString(), font));
-		return composeLine(parts);
-	}
-	
 	
 	private static BufferedImage parseCommand(StringBuffer code, FormulaFont font) {
 		String command=readCommand(code);
@@ -1200,51 +1258,21 @@ public class Formula { // ------------------
 		origin.deleteCharAt(0);
 	}
 	
-	private static BufferedImage composeLine(Vector<BufferedImage> parts) {
-		int height=0;
-		int width=0;
-		for (BufferedImage image:parts){
-			if (image!=null){
-				height=Math.max(height, image.getHeight());
-				width+=image.getWidth();
-			}
-		}
-		if (height==0 || width==0){
-			return null;
-		}
-		BufferedImage result=new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g=(Graphics2D) result.createGraphics();
-		int x=0;
-		for (BufferedImage image:parts){
-			if (image!=null){
-				g.drawImage(image, x, (height-image.getHeight())/2, null);
-				x+=image.getWidth();
-				image=null;
-			}
-		}
-		return result;		
+	
+
+	/****************************** Abfragen **************************************/
+	public String toString() {
+		return code;
 	}
 
-
-	public String getHtmCode() {
-		String result = connectBrackets(code);
-		result = replaceSpecialSigns(result);
-		result = replaceBoldSymbols(result);
-		result = replaceTypeSymbols(result);
-		result = replaceItalicSymbols(result);
-		result = replaceRGBTags(result);
-		result = replaceColorTags(result);
-		result = replaceSuperscriptSymbols(result);
-		result = replaceSubscriptSymbols(result);
-		result = replaceUnderlinedSymbols(result);
-		result = replaceSymbolsWithArrow(result);
-		result = replaceCases(result);
-		result = replaceRootedSymbols(result);
-		result = replaceFracs(result);
-		result = StrReplace(result, "~CASES~", "<td style=\"border-left-style: solid; border-left-width: 2px\">");
-		return result;
+	public String toXML() {
+		return "<formula>" + this.toString() + "</formula>";
 	}
-
+	
+	public BufferedImage image(){
+		return image;
+	}
+	
 	public String getText() {
 		String text = code;
 		// suchen von formatierungen die in \blabla{...} eingeschlossen sind
@@ -1297,17 +1325,6 @@ public class Formula { // ------------------
 		return text; // hier muss noch Konvertierung stattfinden
 	}
 
-	/***************************** Konstruktor ************************************/
-	/***************************** Initialisierung ********************************/
-	public String toString() {
-		return code;
-	}
-
-	public String toXML() {
-		return "<formula>" + this.toString() + "</formula>";
-	}
-
-	/****************************** Abfragen **************************************/
 	/****************************** Hilfsoperationen ******************************/
 	
 	String doReplacements(String input){
@@ -1454,18 +1471,6 @@ public class Formula { // ------------------
 		input=input.replace("\\Zeta ", "\u0396");
 		return input;
 	}
-		
-	private static BufferedImage renderText(String text, FormulaFont font){
-		if (text==null || text.isEmpty()) return null;
-		int width=font.stringWidth(text);
-		int height=font.getHeight();
-		BufferedImage result=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g=graphics(result,font);
-		g.drawString(text, 0,height*3/4);
-		return result;
-	}
 	
-	public BufferedImage image(){
-		return image;
-	}
+
 }
