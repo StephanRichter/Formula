@@ -13,7 +13,7 @@ public class Formula { // ------------------
 	
 	private String code;
 	private BufferedImage image;
-	private int fontSize;
+	private FormulaFont lastFont;
 	
 	/***************************** Test *****************************/
 
@@ -621,7 +621,6 @@ public class Formula { // ------------------
 	/***************************** Konstruktor ************************************/
 	public Formula(String code) {
 		this.code = doReplacements(code);
-		image=render(new StringBuffer(this.code),new FormulaFont(12));
 	}
 	/***************************** Rendering ************************************/
 
@@ -1207,15 +1206,16 @@ public class Formula { // ------------------
 		return "<formula>" + this.toString() + "</formula>";
 	}
 	
-	public BufferedImage image(int fontSize){
-		if (this.fontSize!=fontSize){
-			image=render(new StringBuffer(this.code),new FormulaFont(fontSize));
+	public BufferedImage image(FormulaFont font){
+		if (image==null || !font.equals(lastFont)){
+			image=render(new StringBuffer(code),font);
+			lastFont=font;
 		}
 		return image;
 	}
 	
-	public Dimension getSize(int fontSize) {
-		BufferedImage img = image(fontSize);
+	public Dimension getSize(FormulaFont font) {
+		BufferedImage img = image(font);
 		if (img==null) return new Dimension();
 		return new Dimension(img.getWidth(),img.getHeight());
 	}

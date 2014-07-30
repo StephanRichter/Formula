@@ -23,7 +23,7 @@ public class FormulaPanel extends JPanel{
   public void paint(Graphics g){
     super.paint(g);
     if (formula!=null){
-      g.drawImage(formula.image(12), 0, 0, null);
+      g.drawImage(formula.image(new FormulaFont(g.getFont())), 0, 0, null);
     }
   }
   
