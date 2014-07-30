@@ -763,14 +763,14 @@ public class Formula { // ------------------
 		if (cmd.equals("cup")) return renderIntervall(code, "\u22C3", font);
 		if (cmd.equals("cup+")) return renderIntervall(code, "\u228e", font);
 		if (cmd.equals("Cup")) return renderIntervall(code, "\u22c1", font);
-//		if (cmd.equals("det")) return drawDeterminant(g, new Point(x, y), param, visible);
+		if (cmd.equals("det")) return renderDeterminant(code,font);
 //		if (cmd.equals("dot")) return drawWithDot(g, new Point(x, y), param, visible);
 		if (cmd.equals("exists")) return renderIntervall(code, "\u2203", font);
 		if (cmd.equals("floor")) return renderFloor(code,font);
 		if (cmd.equals("forall")) return renderIntervall(code, "\u2200", font);
 		if (cmd.equals("frac")) return renderFrac(code,font);
 //		if (cmd.equals("hat")) return drawWithHat(g, new Point(x, y), param, visible);
-//		if (cmd.equals("index")) return drawSmaller(g, new Point(x, y + 1), "\\block{"+param+"}", visible);
+		if (cmd.equals("index")) return render("\\block{"+code+"}", font.smaller());
 		if (cmd.equals("integr")) return renderIntervall(code, "\u222B", font);
 		if (cmd.equals("interv")) return renderIntervall(code,font);
 		if ((cmd.equals("it")) || (cmd.equals("italic"))) return render(code, font.italic());
@@ -793,6 +793,18 @@ public class Formula { // ------------------
     return render(code, font);
 	}
 
+	private static BufferedImage renderDeterminant(StringBuffer code, FormulaFont font) {
+			BufferedImage image=renderBlock(code, font);
+			if (image==null) return null;
+			int h=image.getHeight();
+			int w=image.getWidth();
+			BufferedImage result=new BufferedImage(w+20,h,BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g=graphics(result,font);
+			g.drawImage(image,10,0,null);
+			g.drawLine(5, 0, 5, h - 1); // |
+			g.drawLine(w + 15, 0, 15 + w, h -1); // |
+			return result;
+		}
 	private static BufferedImage renderRGBColored(StringBuffer parameters, FormulaFont font) {
 		Vector<String> para=readParameters(parameters.toString());
 		if (para.size()>1){
