@@ -752,7 +752,7 @@ public class Formula { // ------------------
 		if (cmd.equals("cases")) return renderCases(code,font);
 		if (cmd.equals("cap")) return renderIntervall(code, "\u22C2", font);
 		if (cmd.equals("Cap")) return renderIntervall(code, "\u22C0", font);
-//		if (cmd.equals("ceil")) return drawCeil(g, new Point(x, y), param, visible);
+		if (cmd.equals("ceil")) return renderCeiling(code, font);
 //		if (cmd.equals("color")) return drawColored(g, new Point(x, y), param, visible);
 		if (cmd.equals("cup")) return renderIntervall(code, "\u22C3", font);
 		if (cmd.equals("cup+")) return renderIntervall(code, "\u228e", font);
@@ -760,7 +760,7 @@ public class Formula { // ------------------
 //		if (cmd.equals("det")) return drawDeterminant(g, new Point(x, y), param, visible);
 //		if (cmd.equals("dot")) return drawWithDot(g, new Point(x, y), param, visible);
 		if (cmd.equals("exists")) return renderIntervall(code, "\u2203", font);
-//		if (cmd.equals("floor")) return drawFloor(g, new Point(x, y), param, visible);
+		if (cmd.equals("floor")) return renderFloor(code,font);
 		if (cmd.equals("forall")) return renderIntervall(code, "\u2200", font);
 		if (cmd.equals("frac")) return renderFrac(code,font);
 //		if (cmd.equals("hat")) return drawWithHat(g, new Point(x, y), param, visible);
@@ -787,6 +787,42 @@ public class Formula { // ------------------
     return render(code, font);
 	}
 
+	private static BufferedImage renderFloor(StringBuffer code, FormulaFont font) {
+		BufferedImage image=render(code, font);
+		if (image==null) return null;
+		int d=font.getHeight()/3;
+		int h=image.getHeight()+d;
+		int w=image.getWidth()+d;
+		BufferedImage result=new BufferedImage(image.getWidth()+d, image.getHeight()+d, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g=(Graphics2D) result.getGraphics();
+		g.drawImage(image, d/2, d/2, null);
+		font.applyTo(g);
+		g.drawLine(0, 0, 0, h-1);
+		g.drawLine(0, h-1, d/2, h-1);
+		
+		g.drawLine(w-1, 0, w-1, h-1);
+		g.drawLine(w-1-d/2, h-1, w-1, h-1);
+
+		return result;
+	}
+	private static BufferedImage renderCeiling(StringBuffer code, FormulaFont font) {
+		BufferedImage image=render(code, font);
+		if (image==null) return null;
+		int d=font.getHeight()/3;
+		int h=image.getHeight()+d;
+		int w=image.getWidth()+d;
+		BufferedImage result=new BufferedImage(image.getWidth()+d, image.getHeight()+d, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g=(Graphics2D) result.getGraphics();
+		g.drawImage(image, d/2, d/2, null);
+		font.applyTo(g);
+		g.drawLine(0, 0, d/2, 0);
+		g.drawLine(0, 0, 0, h);
+
+		g.drawLine(w-d/2, 0, w-1, 0);
+		g.drawLine(w-1, 0, w-1, h);
+
+		return result;
+	}
 	private static BufferedImage renderMatrix(StringBuffer code, FormulaFont font) {
 		BufferedImage image=renderBlock(code, font);
 		if (image==null) return null;
