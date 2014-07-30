@@ -9,11 +9,18 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
+import java.util.Stack;
 import java.util.Vector;
 
 import javax.swing.JLabel;
 
 public class Formula { // ------------------
+	
+	private final static int CENTER=1;
+	private final static int LEFT=0;
+	private final static int RIGHT=2;
+	
 	/***************************** Zeichenoperationen *****************************/
 
 	public static void main(String[] args) {
@@ -684,10 +691,10 @@ public class Formula { // ------------------
 		while (code.length()>0){
 			parts.add(renderLine(code, font));			
 		}
-		return composeColumn(parts);
+		return composeColumn(parts,LEFT);
 	}
 	
-	private static BufferedImage composeColumn(Vector<BufferedImage> parts) {
+	private static BufferedImage composeColumn(Vector<BufferedImage> parts,int alignment) {
 		int height=0;
 		int width=0;
 		for (BufferedImage image:parts){
@@ -704,7 +711,14 @@ public class Formula { // ------------------
 		int y=0;
 		for (BufferedImage image:parts){
 			if (image!=null){
-				g.drawImage(image, 0, y, null);
+				switch (alignment){
+				case CENTER:
+					g.drawImage(image, (width-image.getWidth())/2, y, null); break;
+				case RIGHT:
+					g.drawImage(image, width-image.getWidth(), y, null); break;
+				default:
+					g.drawImage(image, 0, y, null); break;
+				}				
 				y+=image.getHeight();
 				image=null;
 			}
@@ -755,8 +769,8 @@ public class Formula { // ------------------
 		if (cmd.equals("big")) return render(code,font.bigger());
 		if (cmd.equals("block")) return renderBlock(code,font);
 		if ((cmd.equals("bold")) || (cmd.equals("bf"))) return render(code, font.bold());
-		//if (cmd.equals("cases")) return drawCases(g, new Point(x, y), param, visible);
-//		if (cmd.equals("cap")) return drawIntervallSign(g, new Point(x, y), param, "\u22C2", visible);
+		if (cmd.equals("cases")) return renderCases(code,font);
+		if (cmd.equals("cap")) return renderIntervall(code, "\u22C2", font);
 //		if (cmd.equals("Cap")) return drawIntervallSign(g, new Point(x, y), param, "\u22C0", visible);
 //		if (cmd.equals("ceil")) return drawCeil(g, new Point(x, y), param, visible);
 //		if (cmd.equals("color")) return drawColored(g, new Point(x, y), param, visible);
@@ -791,6 +805,45 @@ public class Formula { // ------------------
 //		if (cmd.equals("vector")) return drawVector(g, new Point(x, y), param, visible);
 		System.out.println(cmd+"("+code+")");
     return render(code, font);
+	}
+	private static BufferedImage renderIntervall(StringBuffer parameters, String symbol, FormulaFont font) {
+		Vector<String> para=readParameters(parameters.toString());
+		Vector<BufferedImage> parts=new Vector<BufferedImage>();
+		
+		if (para.size()>1){
+			parts.add(render(new StringBuffer(para.get(1)),font.smaller()));
+		}
+		parts.add(renderText(symbol, font.bigger()));
+		if (para.size()>0){
+			parts.add(render(new StringBuffer(para.get(0)),font.smaller()));
+		}
+		return composeColumn(parts,CENTER);
+	}
+	private static Vector<String> readParameters(String parameters) {		
+		if (parameters.contains(";")){			
+			return new Vector<String>(Arrays.asList(parameters.split(";")));
+		}
+		if (parameters.contains(",")){
+			return new Vector<String>(Arrays.asList(parameters.split(",")));
+		}
+		Vector<String> res=new Vector<String>();
+		res.add(parameters);
+		return res;
+	}
+	private static BufferedImage renderCases(StringBuffer code, FormulaFont font) {
+		BufferedImage block = renderBlock(code, font);
+		int h=block.getHeight();
+		BufferedImage result=new BufferedImage(block.getWidth()+10,h,BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g=(Graphics2D) result.getGraphics();
+		g.drawImage(block, 10, 0, null);
+		font.applyTo(g);
+		g.drawLine(5, 5, 10, 0);                                 // /
+		g.drawLine(5, h/2 - 5, 5, 5);                            // |
+		g.drawLine(0, h/2, 5, h/2-5);                              // /
+		g.drawLine(0, h/2, 5, h/2+5);                              // \
+		g.drawLine(5, h/2+5, 5, h - 5);          // |
+		g.drawLine(5, h - 5, 10, h); // \
+		return result;
 	}
 	private static BufferedImage renderBlock(StringBuffer code, FormulaFont font) {
 		String s=code.toString();
