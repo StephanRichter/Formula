@@ -643,6 +643,10 @@ public class Formula { // ------------------
 
 		public FormulaFont monospaced() {
 			return new FormulaFont(col, new Font("Monospaced", font.getStyle(), font.getSize()));
+		}
+
+		public FormulaFont smaller() {
+			return new FormulaFont(col, new Font(font.getFontName(), font.getStyle(), font.getSize()*3/4));
 		}		
 	}
 
@@ -740,7 +744,7 @@ public class Formula { // ------------------
 	
 	private static BufferedImage renderCommand(String cmd, StringBuffer code, FormulaFont font) {
 		cmd=cmd.substring(1);
-		//if (cmd.equals("^")) return drawHigher(g, new Point(x, y), param, visible);
+		if (cmd.equals("^")) return renderRaised(code,font);
 		//if (cmd.equals("_")) return drawLower(g, new Point(x, y), param, visible);
 		//if (cmd.equals("~")) return drawWithTilde(g, new Point(x, y), param, visible);
 		//if (cmd.equals("arrow")) return drawUnderArrow(g, new Point(x, y), param, visible);
@@ -783,6 +787,14 @@ public class Formula { // ------------------
 //		if (cmd.equals("vector")) return drawVector(g, new Point(x, y), param, visible);
 		System.out.println(cmd+"("+code+")");
     return render(code, font);
+	}
+	private static BufferedImage renderRaised(StringBuffer code, FormulaFont font) {
+		FormulaFont small = font.smaller();
+		BufferedImage image=render(code,small);
+		BufferedImage result=new BufferedImage(image.getWidth(), image.getHeight()+font.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g=(Graphics2D) result.getGraphics();
+		g.drawImage(image, 0, 0, null);
+		return result;
 	}
 	private static BufferedImage overline(StringBuffer code, FormulaFont font) {
 		BufferedImage image=render(code,font);
