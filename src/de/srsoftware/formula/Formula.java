@@ -798,10 +798,9 @@ public class Formula { // ------------------
 			int h=font.getHeight()+lo.getHeight()+hi.getHeight();
 			int w=Math.max(lo.getWidth(), hi.getWidth());
 			BufferedImage result = new BufferedImage(2+w, h, BufferedImage.TYPE_INT_ARGB);
-			Graphics2D g=(Graphics2D) result.getGraphics();
+			Graphics2D g=graphics(result,font);
 			g.drawImage(hi, 2, 0, null);
 			g.drawImage(lo, 2, h-lo.getHeight(), null);
-			font.applyTo(g);
 			g.drawLine(0, smallFont.getHeight()/3, 0, h-smallFont.getHeight()/2);
 			return result;
 		}
@@ -810,17 +809,20 @@ public class Formula { // ------------------
 			if (boundary==null) return null;
 			int h=font.getHeight()+boundary.getHeight();
 			BufferedImage result = new BufferedImage(2+boundary.getWidth(), h, BufferedImage.TYPE_INT_ARGB);
-			Graphics2D g=(Graphics2D) result.getGraphics();
+			Graphics2D g=graphics(result, font);
 			g.drawImage(boundary, 2, h-boundary.getHeight(), null);
-			font.applyTo(g);
 			g.drawLine(0, 0, 0, h);
 			return result;
 		}
 		BufferedImage result = new BufferedImage(2, font.getHeight()+smallFont.getHeight(), BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g=(Graphics2D) result.getGraphics();
-		font.applyTo(g);
+		Graphics2D g=graphics(result, font);
 		g.drawLine(0, 0, 0, result.getHeight());
 		return result;
+	}
+	private static Graphics2D graphics(BufferedImage image, FormulaFont font) {
+		Graphics2D g=image.createGraphics();
+		font.applyTo(g);
+		return g;
 	}
 	private static BufferedImage renderRoot(StringBuffer parameters, FormulaFont font) {
 		Vector<String> para=readParameters(parameters.toString());
@@ -830,10 +832,9 @@ public class Formula { // ------------------
 			
 			int h=Math.max(rad.getHeight(),rad.getHeight()/2+exp.getHeight());
 			BufferedImage result = new BufferedImage(rad.getWidth()+font.getHeight()/2+exp.getWidth(), h, BufferedImage.TYPE_INT_ARGB);
-			Graphics2D g=(Graphics2D)result.getGraphics();
+			Graphics2D g=graphics(result,font);
 			g.drawImage(exp, 0, h-exp.getHeight()-rad.getHeight()/2, null);
 			g.drawImage(rad, exp.getWidth()+font.getHeight()/2, h-rad.getHeight(), null);
-			font.applyTo(g);
 			g.drawLine(0, h-rad.getHeight()/2, exp.getWidth(), h-rad.getHeight()/2);
 			g.drawLine(exp.getWidth(), h-rad.getHeight()/2, exp.getWidth()+font.getHeight()/4,h);
 			g.drawLine(exp.getWidth()+font.getHeight()/4,h,exp.getWidth()+font.getHeight()/2,h-rad.getHeight());
@@ -845,9 +846,8 @@ public class Formula { // ------------------
 		if (rad==null) return null;
 		int h=rad.getHeight();
 		BufferedImage result = new BufferedImage(rad.getWidth()+font.getHeight()/2+1, h, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g=(Graphics2D)result.getGraphics();
+		Graphics2D g=graphics(result,font);
 		g.drawImage(rad, font.getHeight()/2, h-rad.getHeight(), null);
-		font.applyTo(g);
 		g.drawLine(0, h/2, font.getHeight()/4,h);
 		g.drawLine(font.getHeight()/4,h,font.getHeight()/2,0);
 		g.drawLine(font.getHeight()/2,0,font.getHeight()/2+rad.getWidth(),0);
@@ -861,9 +861,8 @@ public class Formula { // ------------------
 		int h=image.getHeight()+d;
 		int w=image.getWidth()+d;
 		BufferedImage result=new BufferedImage(image.getWidth()+d, image.getHeight()+d, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g=(Graphics2D) result.getGraphics();
+		Graphics2D g=graphics(result,font);
 		g.drawImage(image, d/2, d/2, null);
-		font.applyTo(g);
 		g.drawLine(0, 0, 0, h-1);
 		g.drawLine(0, h-1, d/2, h-1);
 		
@@ -879,9 +878,8 @@ public class Formula { // ------------------
 		int h=image.getHeight()+d;
 		int w=image.getWidth()+d;
 		BufferedImage result=new BufferedImage(image.getWidth()+d, image.getHeight()+d, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g=(Graphics2D) result.getGraphics();
+		Graphics2D g=graphics(result,font);
 		g.drawImage(image, d/2, d/2, null);
-		font.applyTo(g);
 		g.drawLine(0, 0, d/2, 0);
 		g.drawLine(0, 0, 0, h);
 
@@ -896,9 +894,8 @@ public class Formula { // ------------------
 		int h=image.getHeight();
 		int w=image.getWidth();
 		BufferedImage result=new BufferedImage(w+20,h,BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g=(Graphics2D) result.getGraphics();
+		Graphics2D g=graphics(result,font);
 		g.drawImage(image,10,0,null);
-		font.applyTo(g);		
 		g.drawLine(5, 5, 10, 0); // /
 		g.drawLine(5, 5, 5, h - 5); // |
 		g.drawLine(5, h - 5, 10, h); // \
@@ -916,8 +913,7 @@ public class Formula { // ------------------
 		if (numerator==null) return null;
 		int width=Math.max(numerator.getWidth(), denominator.getWidth());
 		BufferedImage result=new BufferedImage(width, numerator.getHeight()+denominator.getHeight()+1, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g=(Graphics2D) result.getGraphics();
-		font.applyTo(g);
+		Graphics2D g=graphics(result,font);
 		g.drawImage(numerator, (width-numerator.getWidth())/2, 0, null);		
 		g.drawImage(denominator, (width-denominator.getWidth())/2, numerator.getHeight()+1, null);
 		g.drawLine(0, numerator.getHeight()+1, width, numerator.getHeight()+1);
@@ -954,9 +950,8 @@ public class Formula { // ------------------
 		BufferedImage block = renderBlock(code, font);
 		int h=block.getHeight();
 		BufferedImage result=new BufferedImage(block.getWidth()+10,h,BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g=(Graphics2D) result.getGraphics();
+		Graphics2D g=graphics(result,font);
 		g.drawImage(block, 10, 0, null);
-		font.applyTo(g);
 		g.drawLine(5, 5, 10, 0);                                 // /
 		g.drawLine(5, h/2 - 5, 5, 5);                            // |
 		g.drawLine(0, h/2, 5, h/2-5);                              // /
@@ -984,9 +979,8 @@ public class Formula { // ------------------
 		if (image==null) return null;
 		int d=font.getHeight()/4;
 		BufferedImage result=new BufferedImage(image.getWidth()+d, image.getHeight()+d, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g=(Graphics2D) result.getGraphics();
+		Graphics2D g=graphics(result,font);
 		g.drawImage(image, 0, d, null);
-		font.applyTo(g);
 		g.drawLine(0, d, image.getWidth()+d, d);		
 		g.drawLine(image.getWidth(), 0, image.getWidth()+d, d);		
 		g.drawLine(image.getWidth(), d+d, image.getWidth()+d, d);	
@@ -2253,8 +2247,7 @@ public class Formula { // ------------------
 		int width=font.stringWidth(text);
 		int height=font.getHeight();
 		BufferedImage result=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g = result.createGraphics();
-		font.applyTo(g);
+		Graphics2D g=graphics(result,font);
 		g.drawString(text, 0,height*3/4);
 		return result;
 	}
