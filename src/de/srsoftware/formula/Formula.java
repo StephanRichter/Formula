@@ -599,12 +599,6 @@ public class Formula { // ------------------
 
 	private String code;
 
-	private int height;
-
-	private int width;
-
-	private boolean boxDrawn = false;
-
 	private static BufferedImage image;
 	
 	private class FormulaFont{
@@ -676,9 +670,7 @@ public class Formula { // ------------------
 	/***************************** Konstruktor ************************************/
 	public Formula(String code) {
 		code = doReplacements(code);
-		System.out.println();
 		image=render(new StringBuffer(code),new FormulaFont());
-		resetDimension();
 	}
 	
 	private static BufferedImage render(StringBuffer code, FormulaFont font) {
@@ -751,10 +743,40 @@ public class Formula { // ------------------
 			StringBuffer chunk=findMatchingBracket(code);
 			return renderCommand(command,chunk,font);
 		}
+		if (code.charAt(0)==' '){
+			code.deleteCharAt(0);
+			return renderCommand(command,font);
+		}
 		System.out.println(command);
 		return renderText(code.toString(), font);
 	}
 	
+	private static BufferedImage renderCommand(String command, FormulaFont font) {
+		command=command.substring(1);
+		if (command.equals("##")) {
+			return renderText("##", font);
+		} 
+		if (command.equals("eye")) {
+			BufferedImage image=renderText("OO", font);
+			Graphics2D g=graphics(image, font);
+			g.drawString("\u2219 \u2219", font.getHeight()/10, font.getHeight()*3/4);
+			return image;
+		}
+		if (command.equals("nokbox")) {
+			BufferedImage image=renderText("\u25a1", font);
+			Graphics2D g=graphics(image, font);
+			g.drawString("\u2717", font.getHeight()/10, font.getHeight()*3/4);
+			return image;
+		}
+		if (command.equals("okbox")) {
+			BufferedImage image=renderText("\u25a1", font);
+			Graphics2D g=graphics(image, font);
+			g.drawString("\u2713", font.getHeight()/10, font.getHeight()*3/4);
+			return image;
+		}
+		System.out.println("unknown command '"+command+"'");
+		return renderText(command, font);
+	}
 	private static BufferedImage renderCommand(String cmd, StringBuffer code, FormulaFont font) {
 		cmd=cmd.substring(1);
 		if (cmd.equals("^")) return renderSuperscript(code,font);
@@ -1166,13 +1188,13 @@ public class Formula { // ------------------
 				break;
 			}
 			if (code.charAt(0)==' '){
-				System.err.println("found space delimited command '"+command+"'!");
 				break;
 			}
 			transferChar(code, command);			
 		}
 		return command.toString();
 	}
+	
 	private static void transferChar(StringBuffer origin, StringBuffer destination) {
 		destination.append(origin.charAt(0));
 		origin.deleteCharAt(0);
@@ -1277,11 +1299,6 @@ public class Formula { // ------------------
 
 	/***************************** Konstruktor ************************************/
 	/***************************** Initialisierung ********************************/
-	public void resetDimension() {
-		height = -1;
-		width = -1;
-	}
-
 	public String toString() {
 		return code;
 	}
@@ -1292,12 +1309,6 @@ public class Formula { // ------------------
 
 	/****************************** Abfragen **************************************/
 	/****************************** Hilfsoperationen ******************************/
-	private String delete(String source, int pos) {
-		if (pos > 0) return source.substring(0, pos - 1) + source.substring(pos + 1);
-		return source.substring(pos + 1);
-	}
-
-/****************************** Hilfsoperationen ******************************/
 	
 	String doReplacements(String input){
 		input=input.replace("\\> ", "\u227b");
