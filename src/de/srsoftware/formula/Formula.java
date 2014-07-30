@@ -2,6 +2,7 @@ package de.srsoftware.formula;
 
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
@@ -1273,6 +1274,11 @@ public class Formula { // ------------------
 		return image;
 	}
 	
+	public Dimension getSize() {
+		return new Dimension(image.getWidth(),image.getHeight());
+	}
+
+	
 	public String getText() {
 		String text = code;
 		// suchen von formatierungen die in \blabla{...} eingeschlossen sind
@@ -1471,6 +1477,5 @@ public class Formula { // ------------------
 		input=input.replace("\\Zeta ", "\u0396");
 		return input;
 	}
-	
 
 }
