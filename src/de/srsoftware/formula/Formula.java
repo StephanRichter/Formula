@@ -766,6 +766,9 @@ public class Formula { // ------------------
 			g.drawString("\u2713", font.getHeight()/10, font.getHeight()*3/4);
 			return image;
 		}
+		if (command.equals("\\")) {
+			return renderText("\\", font);
+		}
 		if (command.isEmpty()) return null;
 		System.err.println("unknown command '"+command+"'");
 		return renderText(command, font);
