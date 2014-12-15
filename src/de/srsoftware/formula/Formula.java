@@ -1312,6 +1312,7 @@ public class Formula { // ------------------
 			input=input.replace("\\cdot ", "\u00b7");
 			input=input.replace("\\chi ", "\u03c7");
 			input=input.replace("\\Chi ", "\u03a7");
+			input=input.replace("\\circ ", "\u2218");
 			input=input.replace("\\complex ", "\u2102");
 			input=input.replace("\\corr ", "\u2259");
 			input=input.replace("\\CO2 ", "CO\\_{2}");			
