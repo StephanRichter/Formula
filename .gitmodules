@@ -1,0 +1,6 @@
+[submodule "libs/Translations"]
+	path = libs/Translations
+	url = https://github.com/StephanRichter/Translations
+[submodule "libs/Tools"]
+	path = libs/Tools
+	url = https://github.com/StephanRichter/Tools
