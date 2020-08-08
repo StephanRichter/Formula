@@ -20,10 +20,10 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import de.srsoftware.tools.HorizontalPanel;
-import de.srsoftware.tools.SuggestField;
-import de.srsoftware.tools.VerticalPanel;
-import de.srsoftware.tools.translations.Translations;
+import de.keawe.tools.translations.Translation;
+import de.srsoftware.tools.panels.HorizontalPanel;
+import de.srsoftware.tools.gui.SuggestField;
+import de.srsoftware.tools.panels.VerticalPanel;
 
 /**
  * 
@@ -33,60 +33,62 @@ import de.srsoftware.tools.translations.Translations;
  * @author Stephan Richter
  */
 
-
-
 public class FormulaInputDialog extends JDialog implements ActionListener, KeyListener {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+
 	public static String readInput(JFrame owner, String title) {
 		initLocation(owner);
-		FormulaInputDialog fp = new FormulaInputDialog(owner, title, true);		
+		FormulaInputDialog fp = new FormulaInputDialog(owner, title, true);
 		fp.setVisible(true);
 		return fp.getResult();
 	}
+
 	public static String readInput(JFrame owner, String title, String code) {
 		initLocation(owner);
 		FormulaInputDialog fp = new FormulaInputDialog(owner, title, code, true);
 		fp.setVisible(true);
-		
+
 		return fp.getResult();
 	}
-	private static void initLocation(JFrame owner){
-		if (owner!=null && (savedX < 0) && (savedY < 0)){
-			savedX=owner.getLocation().x+((owner.getWidth()-frameWidth)/2);
-			savedY=owner.getLocation().y+((owner.getHeight()-frameHeight)/2);
+
+	private static void initLocation(JFrame owner) {
+		if (owner != null && (savedX < 0) && (savedY < 0)) {
+			savedX = owner.getLocation().x + ((owner.getWidth() - frameWidth) / 2);
+			savedY = owner.getLocation().y + ((owner.getHeight() - frameHeight) / 2);
 		}
-		
+
 	}
+
 	private static String readInput(JDialog owner, String title) {
 		FormulaInputDialog fp = new FormulaInputDialog(owner, title, true);
 		fp.setVisible(true);
 		return fp.getResult();
 	}
+
 	private static String readInput(JDialog owner, String title, String code) {
 		FormulaInputDialog fp = new FormulaInputDialog(owner, title, code, true);
 		fp.setVisible(true);
 		return fp.getResult();
 	}
+
 	// Anfang Variablen
 	private FormulaPanel formulaPanel;
 	private SuggestField inputTextField;
 	private String formula = null;
 	private String oldFormula = null;
-	private JButton addSum,product,integral,matrix;
-	private JButton fraction,root,small,big;
-	private JButton cases,subscript,superscript;
-	private JButton ceiling,floor,type;
-	private JButton bold,italic,underlined,overlined;
+	private JButton addSum, product, integral, matrix;
+	private JButton fraction, root, small, big;
+	private JButton cases, subscript, superscript;
+	private JButton ceiling, floor, type;
+	private JButton bold, italic, underlined, overlined;
 	private JButton okButton;
 
-	
 	// Ende Variablen
 
-
-	private JComboBox arrowMenu;
+	private JComboBox<String> arrowMenu;
 
 	private static int savedX = -1;
 
@@ -96,8 +98,8 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 
 	private static final int frameHeight = 400;
 
-	private static String _(String text) { 
-		return Translations.get(text);
+	private static String t(String text) {
+		return Translation.get(Formula.class, text);
 	}
 
 	private FormulaInputDialog(JDialog owner, String title, boolean modal) {
@@ -129,15 +131,14 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		dispose(true);
 	}
 
-	public void dispose(boolean save){
-		savedX=this.getX();
-		savedY=this.getY();
-		if (!save) formula=oldFormula;
+	public void dispose(boolean save) {
+		savedX = this.getX();
+		savedY = this.getY();
+		if (!save) formula = oldFormula;
 		super.dispose();
 	}
-	
-	public void keyPressed(KeyEvent e) {
-	}
+
+	public void keyPressed(KeyEvent e) {}
 
 	public void keyReleased(KeyEvent e) {
 		setFormula(inputTextField.getText());
@@ -147,25 +148,23 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		}
 	}
 
-	public void keyTyped(KeyEvent e) {
-	}
+	public void keyTyped(KeyEvent e) {}
 
 	private void addSumActionPerformed(ActionEvent evt) {
-		insertText("\\sum{" + readInput(this, _("enter lower bounds for sum:")) + ",");
+		insertText("\\sum{" + readInput(this, t("enter lower bounds for sum:")) + ",");
 	}
-	
+
 	private void boldActionPerformed(ActionEvent evt) {
 		format("bold");
 	}
 
 	private void casesActionPerformed(ActionEvent evt) {
-		insertText(readInput(this, _("enter cases separated by comma or semicolon:"), "\\cases{") + "}");
+		insertText(readInput(this, t("enter cases separated by comma or semicolon:"), "\\cases{") + "}");
 	}
 
 	private void ceilingActionPerformed(ActionEvent evt) {
 		format("ceil");
 	}
-
 
 	private void floorActionPerformed(ActionEvent evt) {
 		format("floor");
@@ -184,15 +183,13 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	}
 
 	private void fractalActionPerformed(ActionEvent evt) {
-		insertText("\\frac{" + readInput(this, _("enter divisor:")) + ",");
+		insertText("\\frac{" + readInput(this, t("enter divisor:")) + ",");
 	}
 
 	// Ende Ereignisprozeduren
 	private String getResult() {
 		return formula;
 	}
-	
-	
 
 	private void init(String title, String text, boolean modal) {
 		oldFormula = text;
@@ -207,226 +204,228 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 			savedY = (d.height - getSize().height) / 2;
 		}
 		setLocation(savedX, savedY);
-		
+
 		Component panel;
-		add(panel=createPanel(text));
-		Dimension dim=panel.getPreferredSize();
-		setSize(dim.width,dim.height+20);
+		add(panel = createPanel(text));
+		Dimension dim = panel.getPreferredSize();
+		setSize(dim.width, dim.height + 20);
 
 		setResizable(false);
 	}
 
 	private Component createPanel(String text) {
-		VerticalPanel vp=new VerticalPanel();
+		VerticalPanel vp = new VerticalPanel();
 		vp.add(createInputTextField(text));
-		vp.add(formulaPanel=createFormulaPanel());
+		vp.add(formulaPanel = createFormulaPanel());
 		vp.add(createButtons());
 		vp.skalieren();
 		return vp;
-  }
+	}
+
 	private HorizontalPanel createButtons() {
-		HorizontalPanel buttonPanel=new HorizontalPanel();
-		
+		HorizontalPanel buttonPanel = new HorizontalPanel();
+
 		buttonPanel.add(rowOne());
 		buttonPanel.add(rowTwo());
 		buttonPanel.add(rowThree());
 		buttonPanel.add(rowFour());
-    buttonPanel.add(arrowBox());
-    buttonPanel.skalieren();
+		buttonPanel.add(arrowBox());
+		buttonPanel.skalieren();
 
-    return buttonPanel;
-  }
+		return buttonPanel;
+	}
+
 	private JComponent arrowBox() {
 		VerticalPanel arrowBox = new VerticalPanel();
-		arrowMenu = new JComboBox();
+		arrowMenu = new JComboBox<String>();
 //		arrowMenu.setBounds(590, 264, 200, 25);
-		arrowMenu.addItem(_("Arrows"));
+		arrowMenu.addItem(t("Arrows"));
 		arrowMenu.addItem("\u2190 (<-)");
 		arrowMenu.addItem("\u21D0 (<=)");
 		arrowMenu.addItem("\u2194 (<->)");
 		arrowMenu.addItem("\u21D4 (<=>)");
-		arrowMenu.addItem("\u2193 ("+_("Downarrow (single)")+")");
-		arrowMenu.addItem("\u21D3 ("+_("Downarrow (double)")+")");
+		arrowMenu.addItem("\u2193 (" + t("Downarrow (single)") + ")");
+		arrowMenu.addItem("\u21D3 (" + t("Downarrow (double)") + ")");
 		arrowMenu.addItem("\u2192 (->)");
 		arrowMenu.addItem("\u21D2 (=>)");
-		arrowMenu.addItem("\u2191 ("+_("Uparrow (single)")+")");
-		arrowMenu.addItem("\u21D1 ("+_("Uparrow (double)")+")");
+		arrowMenu.addItem("\u2191 (" + t("Uparrow (single)") + ")");
+		arrowMenu.addItem("\u21D1 (" + t("Uparrow (double)") + ")");
 		arrowMenu.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String s = arrowMenu.getSelectedItem().toString();
-				if (s.contains("(")) insertText(s.substring(0,1));
+				if (s.contains("(")) insertText(s.substring(0, 1));
 			}
 		});
 		arrowBox.add(arrowMenu);
 
-		arrowBox.add(okButton=new JButton(_("Ok")));
+		arrowBox.add(okButton = new JButton(t("Ok")));
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				okButtonActionPerformed(evt);
 			}
 		});
 		arrowBox.skalieren();
-		
-		Dimension dim=arrowBox.getPreferredSize();
-		dim.height=dim.height+50;
+
+		Dimension dim = arrowBox.getPreferredSize();
+		dim.height = dim.height + 50;
 		arrowBox.setPreferredSize(dim);
 		Point loc = okButton.getLocation();
-		okButton.setLocation(loc.x+100, loc.y+50);
-	  return arrowBox;
-  }
+		okButton.setLocation(loc.x + 100, loc.y + 50);
+		return arrowBox;
+	}
 
 	private VerticalPanel rowFour() {
-		VerticalPanel four=new VerticalPanel();
-		
-		four.add(type=new JButton(_("typewriter")));
+		VerticalPanel four = new VerticalPanel();
+
+		four.add(type = new JButton(t("typewriter")));
 		type.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				typeActionPerformed(evt);
 			}
 		});
-		
-		four.add(bold=new JButton(_("bold")));
+
+		four.add(bold = new JButton(t("bold")));
 		bold.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				boldActionPerformed(evt);
 			}
 		});
 
-		four.add(italic=new JButton(_("italic")));
+		four.add(italic = new JButton(t("italic")));
 		italic.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				italicActionPerformed(evt);
 			}
 		});
 
-		four.add(underlined=new JButton(_("underlined")));
+		four.add(underlined = new JButton(t("underlined")));
 		underlined.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				underlinedActionPerformed(evt);
 			}
 		});
 
-		four.add(overlined=new JButton(_("overlined")));
+		four.add(overlined = new JButton(t("overlined")));
 		overlined.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				overlinedActionPerformed(evt);
 			}
 		});
 		four.skalieren();
-	  return four;
-  }
-	
+		return four;
+	}
+
 	private VerticalPanel rowThree() {
-		VerticalPanel three=new VerticalPanel();
-		
-		three.add(cases=new JButton(_("cases")));
+		VerticalPanel three = new VerticalPanel();
+
+		three.add(cases = new JButton(t("cases")));
 		cases.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				casesActionPerformed(evt);
 			}
 		});
-		
-		three.add(subscript=new JButton(_("subscript")));
+
+		three.add(subscript = new JButton(t("subscript")));
 		subscript.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				subscriptActionPerformed(evt);
 			}
 		});
 
-		three.add(superscript=new JButton(_("superscript")));
+		three.add(superscript = new JButton(t("superscript")));
 		superscript.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				superscriptActionPerformed(evt);
 			}
 		});
-		
-		three.add(ceiling=new JButton(_("ceiling")));
+
+		three.add(ceiling = new JButton(t("ceiling")));
 		ceiling.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				ceilingActionPerformed(evt);
 			}
 		});
 
-		three.add(floor=new JButton(_("floor")));
+		three.add(floor = new JButton(t("floor")));
 		floor.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				floorActionPerformed(evt);
 			}
 		});
 		three.skalieren();
-	  return three;
-  }
-	
+		return three;
+	}
+
 	private VerticalPanel rowTwo() {
-		VerticalPanel two=new VerticalPanel();
-		two.add(fraction=new JButton(_("fraction")));
+		VerticalPanel two = new VerticalPanel();
+		two.add(fraction = new JButton(t("fraction")));
 		fraction.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				fractalActionPerformed(evt);
 			}
 		});
-		
-		two.add(root=new JButton(_("root")));
+
+		two.add(root = new JButton(t("root")));
 		root.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				rootActionPerformed(evt);
 			}
 		});
-		
-		two.add(small=new JButton(_("small")));
+
+		two.add(small = new JButton(t("small")));
 		small.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				smallActionPerformed(evt);
 			}
 		});
-		
-		two.add(big=new JButton(_("big")));
+
+		two.add(big = new JButton(t("big")));
 		big.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				bigActionPerformed(evt);
 			}
 		});
 		two.skalieren();
-	  return two;
-  }
+		return two;
+	}
+
 	private VerticalPanel rowOne() {
-		VerticalPanel one=new VerticalPanel();
-		one.add(addSum=new JButton(_("sum")));
+		VerticalPanel one = new VerticalPanel();
+		one.add(addSum = new JButton(t("sum")));
 		addSum.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				addSumActionPerformed(evt);
 			}
 		});
-		
-		one.add(product=new JButton(_("product")));
+
+		one.add(product = new JButton(t("product")));
 		product.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				productActionPerformed(evt);
 			}
 		});
-		
-		one.add(integral=new JButton(_("integral")));
+
+		one.add(integral = new JButton(t("integral")));
 		integral.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				integralActionPerformed(evt);
 			}
 		});
-		
-		one.add(matrix=new JButton(_("matrix")));
+
+		one.add(matrix = new JButton(t("matrix")));
 		matrix.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				matrixActionPerformed(evt);
 			}
-		});		
+		});
 
-		
-		
 		one.skalieren();
-	  return one;
-  }
+		return one;
+	}
+
 	private SuggestField createInputTextField(String text) {
-		inputTextField=new SuggestField();
-		inputTextField.setPreferredSize(new Dimension(frameWidth-10, 27));
+		inputTextField = new SuggestField();
+		inputTextField.setPreferredSize(new Dimension(frameWidth - 10, 27));
 		inputTextField.setSize(inputTextField.getPreferredSize());
 		inputTextField.setEditable(true);
 		inputTextField.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 17));
@@ -437,18 +436,18 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 		inputTextField.addKeyListener(this);
 		inputTextField.addActionListener(this);
 		return inputTextField;
-  }
-	
+	}
+
 	private FormulaPanel createFormulaPanel() {
-		FormulaPanel formulaPanel=new FormulaPanel();
-		formulaPanel.setPreferredSize(new Dimension(frameWidth-10, frameHeight-170));
+		FormulaPanel formulaPanel = new FormulaPanel();
+		formulaPanel.setPreferredSize(new Dimension(frameWidth - 10, frameHeight - 170));
 		formulaPanel.setSize(formulaPanel.getPreferredSize());
 		formulaPanel.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 15));
 		formulaPanel.setForeground(Color.black);
-		formulaPanel.setBackground(Color.white);		
-	  return formulaPanel;
-  }
-	
+		formulaPanel.setBackground(Color.white);
+		return formulaPanel;
+	}
+
 	private void insertText(String tx) {
 		String tmp = inputTextField.getText();
 		int pos = inputTextField.getCaretPosition();
@@ -459,7 +458,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	}
 
 	private void integralActionPerformed(ActionEvent evt) {
-		insertText(readInput(this, _("enter integral bounds, separated by comma:"), "\\integr{") + "}");
+		insertText(readInput(this, t("enter integral bounds, separated by comma:"), "\\integr{") + "}");
 	}
 
 	private void italicActionPerformed(ActionEvent evt) {
@@ -475,18 +474,18 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	}
 
 	private void productActionPerformed(ActionEvent evt) {
-		insertText("\\prod{" + readInput(this, _("enter lower bounds for product:")) + ",");
+		insertText("\\prod{" + readInput(this, t("enter lower bounds for product:")) + ",");
 	}
 
 	private void rootActionPerformed(ActionEvent evt) {
-		insertText(readInput(this, _("enter (degree,) radicand of the root expression:"), "\\root{") + "}");
+		insertText(readInput(this, t("enter (degree,) radicand of the root expression:"), "\\root{") + "}");
 	}
 
-	private void setFormula(String code) {	
-		formula=code;
+	private void setFormula(String code) {
+		formula = code;
 		formulaPanel.setFormula(code);
 		repaint();
-		//System.out.println("set formula to "+formula);
+		// System.out.println("set formula to "+formula);
 		inputTextField.requestFocus();
 	}
 
@@ -507,7 +506,7 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	}
 
 	protected void bigActionPerformed(ActionEvent evt) {
-		format("big");		
+		format("big");
 	}
 
 	protected void okButtonActionPerformed(ActionEvent evt) {
@@ -517,19 +516,19 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	protected void smallActionPerformed(ActionEvent evt) {
 		format("small");
 	}
-	
+
 	public static void main(String[] args) {
-		JFrame app=new JFrame("Test");
-		String code=FormulaInputDialog.readInput(app, "Input dialog for Test");
+		JFrame app = new JFrame("Test");
+		String code = FormulaInputDialog.readInput(app, "Input dialog for Test");
 		System.out.println(code);
 		System.err.println(code);
-		
-		JPanel panel=new FormulaPanel(code);		
-		panel.setPreferredSize(new Dimension(800,600));
-		panel.setSize(panel.getPreferredSize());		
+
+		JPanel panel = new FormulaPanel(code);
+		panel.setPreferredSize(new Dimension(800, 600));
+		panel.setSize(panel.getPreferredSize());
 		app.add(panel);
 		app.pack();
 		app.setDefaultCloseOperation(EXIT_ON_CLOSE);
-		app.setVisible(true);	
+		app.setVisible(true);
 	}
 }
