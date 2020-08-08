@@ -7,7 +7,7 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.Vector;
 
-public class Formula { // ------------------
+public class Formula implements Comparable<Formula> { // ------------------
 	
 
 	
@@ -1422,6 +1422,11 @@ public class Formula { // ------------------
 		input=input.replace("\\zeta " ,"\u03b6");
 		input=input.replace("\\Zeta ", "\u0396");
 		return input;
+	}
+
+	@Override
+	public int compareTo(Formula other) {
+		return code.compareTo(other.code);
 	}
 
 }
