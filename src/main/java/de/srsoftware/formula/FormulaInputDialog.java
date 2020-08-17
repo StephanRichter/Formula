@@ -6,12 +6,16 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -424,7 +428,19 @@ public class FormulaInputDialog extends JDialog implements ActionListener, KeyLi
 	}
 
 	private SuggestField createInputTextField(String text) {
-		inputTextField = new SuggestField();
+		inputTextField = new SuggestField() {
+			private static final long serialVersionUID = 1669460044993000108L;
+
+			@Override
+			public void paste() {
+				Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+				try {
+					Object o = systemClipboard.getData(DataFlavor.stringFlavor);
+					if (o != null) setText(o.toString().replace("\n","\\n "));
+				} catch (UnsupportedFlavorException | IOException e) {}
+				
+			}
+		};
 		inputTextField.setPreferredSize(new Dimension(frameWidth - 10, 27));
 		inputTextField.setSize(inputTextField.getPreferredSize());
 		inputTextField.setEditable(true);

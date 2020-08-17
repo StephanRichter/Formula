@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.srsoftware</groupId>
 	<artifactId>formula</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2</version>
 	<name>Formula</name>
 	<description>Library to display LaTeX-like formulas</description>
 	<url>https://github.com/StephanRichter/Formula</url>
@@ -37,7 +37,7 @@
 		<dependency>
 			<groupId>de.srsoftware</groupId>
 			<artifactId>tools.gui.suggestfield</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1</version>
 		</dependency>
 	</dependencies>
 
